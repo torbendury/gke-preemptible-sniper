@@ -35,5 +35,5 @@ COPY --from=build /etc/group /etc/group
 
 USER appuser:appuser
 
-COPY --from=build /app/app /go/bin/kube-node-status
-ENTRYPOINT ["/go/bin/kube-node-status"]
+COPY --from=build /app/app /go/bin/gke-preemptible-sniper
+ENTRYPOINT ["/go/bin/gke-preemptible-sniper"]
