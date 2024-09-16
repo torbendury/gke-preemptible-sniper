@@ -13,6 +13,7 @@ import (
 
 var kubernetesClient *k8s.Client
 var googleClient *gcloud.Client
+var projectID string
 
 func init() {
 	var err error
@@ -24,15 +25,15 @@ func init() {
 	if err != nil {
 		log.Fatalf("Failed to create Google Cloud client: %v", err)
 	}
-}
-
-func main() {
 
 	// Get the project ID
-	projectID, err := gcloud.GetProjectID()
+	projectID, err = gcloud.GetProjectID()
 	if err != nil {
 		log.Fatalf("Failed to get project ID: %v", err)
 	}
+}
+
+func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
