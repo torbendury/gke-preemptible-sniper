@@ -15,14 +15,14 @@ This project is in a very early stage of development. It is not recommended to u
 ## Roadmap
 
 - [x] gke-preemptible-sniper 0.0.0:
-    ✔ retrieve running nodes in cluster @done(24-09-16 22:23)
-    ✔ drain node @done(24-09-16 22:27)
-    ✔ cordon node @done(24-09-16 22:25)
-    ✔ retrieve zone and GCP project id @done(24-09-16 22:34)
-    ✔ check if node has annotation set @done(24-09-16 22:28)
-    ✔ set annotation @done(24-09-16 22:28)
-    ✔ get VM instance in GCP @done(24-09-16 22:33)
-    ✔ delete VM instance in GCP @done(24-09-16 22:52)
+    - [x] retrieve running nodes in cluster *@done(24-09-16 22:23)*
+    - [x] drain node *@done(24-09-16 22:27)*
+    - [x] cordon node *@done(24-09-16 22:25)*
+    - [x] retrieve zone and GCP project id *@done(24-09-16 22:34)*
+    - [x] check if node has annotation set *@done(24-09-16 22:28)*
+    - [x] set annotation *@done(24-09-16 22:28)*
+    - [x] get VM instance in GCP *@done(24-09-16 22:33)*
+    - [x] delete VM instance in GCP *@done(24-09-16 22:52)*
 
 
 - [ ] gke-preemptible-sniper 0.1.0:
