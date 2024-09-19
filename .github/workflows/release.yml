@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - "**/helm/kube-node-status/Chart.yaml"
+      - "**/helm/gke-preemptible-sniper/Chart.yaml"
     # Move to positive matches later
     #paths:
     #  - "**/cmd"
@@ -46,11 +46,11 @@ jobs:
           context: .
           push: true
           target: release
-          tags: torbendury/kube-node-status:${{ steps.pre-step.outputs.release_tag }},torbendury/kube-node-status:latest
+          tags: torbendury/gke-preemptible-sniper:${{ steps.pre-step.outputs.release_tag }},torbendury/gke-preemptible-sniper:latest
 
       - name: Update Helm chart appVersion
         run: |
-          yq e ".appVersion = \"${{ steps.pre-step.outputs.release_tag }}\"" -i ./helm/kube-node-status/Chart.yaml
+          yq e ".appVersion = \"${{ steps.pre-step.outputs.release_tag }}\"" -i ./helm/gke-preemptible-sniper/Chart.yaml
         shell: bash
 
       - name: Commit changes

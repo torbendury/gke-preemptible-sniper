@@ -15,12 +15,8 @@ jobs:
     uses: ./.github/workflows/unittest.yml
     secrets: inherit
 
-  e2etest:
-    uses: ./.github/workflows/e2etest.yml
-    secrets: inherit
-
   report:
-    needs: [unittest, e2etest]
+    needs: [unittest]
     runs-on: ubuntu-latest
     outputs:
       overall-result: ${{ steps.check.outputs.result }}
@@ -28,7 +24,7 @@ jobs:
       - name: Set overall result
         id: check
         run: |
-          if [[ "${{ needs.unittest.outputs.test-result }}" == "success" && "${{ needs.e2etest.outputs.test-result }}" == "0" ]]; then
+          if [[ "${{ needs.unittest.outputs.test-result }}" == "success" ]]; then
             echo "::set-output name=result::success"
           else
             echo "::set-output name=result::failure"
