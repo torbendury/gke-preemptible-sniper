@@ -23,4 +23,6 @@ build:
 
 ### Install the Helm Chart
 helm:
-> helm upgrade --install gke-preemptible-sniper ./helm/gke-preemptible-sniper --set image.tag=latest --namespace gke-preemptible-sniper --create-namespace
+> helm repo add gke-preemptible-sniper https://torbendury.github.io/gke-preemptible-sniper/ || true
+> helm repo update
+> helm upgrade --install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace
