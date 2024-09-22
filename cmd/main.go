@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
@@ -17,6 +17,9 @@ var googleClient *gcloud.Client
 var projectID string
 
 var logger *slog.Logger
+
+var healthy bool
+var ready bool
 
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -37,8 +40,12 @@ func init() {
 	// Get the project ID
 	projectID, err = gcloud.GetProjectID()
 	if err != nil {
-		log.Fatalf("Failed to get project ID: %v", err)
+		logger.Error("failed to get project ID", "error", err)
+		os.Exit(3)
 	}
+
+	healthy = true
+	ready = true
 }
 
 func getContextWithTimeout() (context.Context, context.CancelFunc) {
@@ -47,6 +54,33 @@ func getContextWithTimeout() (context.Context, context.CancelFunc) {
 }
 
 func main() {
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if healthy {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok"))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("not ok"))
+		}
+	})
+
+	http.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		if ready {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ready"))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("not ready"))
+		}
+	})
+
+	go func() {
+		logger.Info("starting HTTP server for health checks")
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			logger.Error("HTTP server error", "error", err)
+			os.Exit(4)
+		}
+	}()
 
 	logger.Info("starting gke-preemptible-sniper")
 

@@ -57,9 +57,9 @@ resources:
 
 livenessProbe:
   httpGet:
-    path: /live
+    path: /healthz
     port: http
 readinessProbe:
   httpGet:
-    path: /ready
+    path: /readyz
     port: http
