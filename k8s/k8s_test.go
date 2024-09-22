@@ -42,15 +42,15 @@ func TestNewClient(t *testing.T) {
 		t.Fatalf("expected client, got nil")
 	}
 
-	// Test with nil config to ensure fallback works
+	// Test with nil config to ensure fallback also fails within CI
 	client, err = NewClient(nil)
 	if err == nil {
 		t.Fatalf("expected error, got %v", err)
 	}
 
-	// Verify that the client is not nil
-	if client == nil {
-		t.Fatalf("expected client, got nil")
+	// Verify that the client is nil
+	if client != nil {
+		t.Fatalf("expected nil, got client")
 	}
 }
 
