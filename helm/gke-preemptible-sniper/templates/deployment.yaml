@@ -49,3 +49,5 @@ spec:
               value: {{ .Values.time.allowList }}
             - name: BLOCKED_HOURS
               value: {{ .Values.time.blockList }}
+            - name: CHECK_INTERVAL_SECONDS
+              value: {{ .Values.time.checkIntervalSeconds }}

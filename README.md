@@ -50,7 +50,7 @@ This project is in a very early stage of development. It is not recommended to u
 - [ ] gke-preemptible-sniper 0.2.0:
   - [x] allowlist hours
   - [x] blocklist hours
-  - configurable check interval
+  - [x] configurable check interval
   - configurable node drain timeout
 
 - [ ] gke-preemptible-sniper 0.3.0:
