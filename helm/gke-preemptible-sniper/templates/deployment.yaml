@@ -51,3 +51,5 @@ spec:
               value: {{ .Values.time.blockList }}
             - name: CHECK_INTERVAL_SECONDS
               value: {{ .Values.time.checkIntervalSeconds }}
+            - name: NODE_DRAIN_TIMEOUT_SECONDS
+              value: {{ .Values.time.nodeDrainTimeoutSeconds }}
