@@ -4,7 +4,7 @@ go 1.22.6
 
 require (
 	cloud.google.com/go/compute v1.28.1
-	github.com/golang/mock v1.1.1
+	github.com/golang/mock v1.6.0
 	github.com/googleapis/gax-go/v2 v2.13.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	google.golang.org/api v0.198.0
