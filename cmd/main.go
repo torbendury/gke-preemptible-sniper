@@ -17,7 +17,7 @@ var projectID string
 
 func init() {
 	var err error
-	kubernetesClient, err = k8s.NewClient()
+	kubernetesClient, err = k8s.NewClient(nil)
 	if err != nil {
 		log.Fatalf("Failed to create Kubernetes client: %v", err)
 	}

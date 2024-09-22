@@ -18,27 +18,28 @@ import (
 )
 
 type Client struct {
-	clientset *kubernetes.Clientset
+	client kubernetes.Interface
 }
 
-func NewClient() (*Client, error) {
-	var config *rest.Config
+func NewClient(config *rest.Config) (*Client, error) {
 	var err error
 
-	// Try to use in-cluster config
-	config, err = rest.InClusterConfig()
-	if err != nil {
-		// Fallback to kubeconfig file
-		var kubeconfig string
-		if home := homedir.HomeDir(); home != "" {
-			kubeconfig = filepath.Join(home, ".kube", "config")
-		} else {
-			kubeconfig = ""
-		}
-
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if config == nil {
+		// Try to use in-cluster config
+		config, err = rest.InClusterConfig()
 		if err != nil {
-			return nil, err
+			// Fallback to kubeconfig file
+			var kubeconfig string
+			if home := homedir.HomeDir(); home != "" {
+				kubeconfig = filepath.Join(home, ".kube", "config")
+			} else {
+				kubeconfig = ""
+			}
+
+			config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -46,12 +47,11 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &Client{clientset: clientset}, nil
+	return &Client{client: clientset}, nil
 }
 
 func (c *Client) GetNodes(ctx context.Context) ([]string, error) {
-	nodes, err := c.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	nodes, err := c.client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *Client) GetNodes(ctx context.Context) ([]string, error) {
 }
 
 func (c *Client) CordonNode(ctx context.Context, nodeName string) error {
-	node, err := c.clientset.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -88,12 +88,12 @@ func (c *Client) CordonNode(ctx context.Context, nodeName string) error {
 		return err
 	}
 
-	_, err = c.clientset.CoreV1().Nodes().Patch(ctx, nodeName, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{})
+	_, err = c.client.CoreV1().Nodes().Patch(ctx, nodeName, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{})
 	return err
 }
 
 func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
-	pods, err := c.clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{
+	pods, err := c.client.CoreV1().Pods("").List(ctx, metav1.ListOptions{
 		FieldSelector: "spec.nodeName=" + nodeName,
 	})
 	if err != nil {
@@ -123,11 +123,11 @@ func (c *Client) evictPod(ctx context.Context, pod *v1.Pod) error {
 		DeleteOptions: &metav1.DeleteOptions{},
 	}
 
-	return c.clientset.CoreV1().Pods(pod.Namespace).Evict(ctx, eviction)
+	return c.client.CoreV1().Pods(pod.Namespace).Evict(ctx, eviction)
 }
 
 func (c *Client) SetNodeAnnotation(ctx context.Context, nodeName, key, value string) error {
-	node, err := c.clientset.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -153,12 +153,12 @@ func (c *Client) SetNodeAnnotation(ctx context.Context, nodeName, key, value str
 		return err
 	}
 
-	_, err = c.clientset.CoreV1().Nodes().Patch(ctx, nodeName, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{})
+	_, err = c.client.CoreV1().Nodes().Patch(ctx, nodeName, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{})
 	return err
 }
 
 func (c *Client) HasNodeAnnotation(ctx context.Context, nodeName, key string) (bool, error) {
-	node, err := c.clientset.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -172,7 +172,7 @@ func (c *Client) HasNodeAnnotation(ctx context.Context, nodeName, key string) (b
 }
 
 func (c *Client) GetNodeAnnotation(ctx context.Context, nodeName, key string) (string, error) {
-	node, err := c.clientset.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -190,7 +190,7 @@ func (c *Client) GetNodeAnnotation(ctx context.Context, nodeName, key string) (s
 }
 
 func (c *Client) GetNodeLabel(ctx context.Context, nodeName, key string) (string, error) {
-	node, err := c.clientset.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
