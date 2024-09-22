@@ -44,3 +44,8 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: ALLOWED_HOURS
+              value: {{ .Values.time.allowList }}
+            - name: BLOCKED_HOURS
+              value: {{ .Values.time.blockList }}

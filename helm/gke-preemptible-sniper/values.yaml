@@ -63,3 +63,8 @@ readinessProbe:
   httpGet:
     path: /readyz
     port: http
+
+# by default, gke-preemptible-sniper will be allowed to run at any time
+time:
+  allowList: "00:00-23:59"
+  blockList: ""

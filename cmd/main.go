@@ -5,11 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/torbendury/gke-preemptible-sniper/gcloud"
 	"github.com/torbendury/gke-preemptible-sniper/k8s"
-	"golang.org/x/exp/rand"
+	"github.com/torbendury/gke-preemptible-sniper/timing"
 )
 
 var kubernetesClient *k8s.Client
@@ -20,6 +21,9 @@ var logger *slog.Logger
 
 var healthy bool
 var ready bool
+
+var allowedTimes timing.TimeSlots
+var blockedTimes timing.TimeSlots
 
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -42,6 +46,26 @@ func init() {
 	if err != nil {
 		logger.Error("failed to get project ID", "error", err)
 		os.Exit(3)
+	}
+
+	allowedHours := os.Getenv("ALLOWED_HOURS")
+	if allowedHours == "" {
+		logger.Error("ALLOWED_HOURS environment variable is required")
+		os.Exit(4)
+	}
+	allowedTimes, err = timing.ParseTimeSlots(strings.Split(allowedHours, ","))
+	if err != nil {
+		logger.Error("failed to parse ALLOWED_HOURS", "error", err)
+		os.Exit(5)
+	}
+
+	blockedHours := os.Getenv("BLOCKED_HOURS")
+	if blockedHours != "" {
+		blockedTimes, err = timing.ParseTimeSlots(strings.Split(blockedHours, ","))
+		if err != nil {
+			logger.Error("failed to parse BLOCKED_HOURS", "error", err)
+			os.Exit(6)
+		}
 	}
 
 	healthy = true
@@ -116,9 +140,11 @@ func main() {
 					continue
 				}
 
-				// calculate random time within 12h-18h in the future
-				rand.Seed(uint64(time.Now().UnixNano()))
-				randTime := time.Now().Add(time.Duration(rand.Intn(6)+12) * time.Hour)
+				randTime, err := timing.CreateAllowedTime(allowedTimes, blockedTimes)
+				if err != nil {
+					logger.Error("failed to create allowed time", "error", err)
+					continue
+				}
 
 				logger.Info("adding annotation to node", "node", node, "timestamp", randTime.Format(time.RFC3339))
 				err = kubernetesClient.SetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp", randTime.Format(time.RFC3339))
