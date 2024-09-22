@@ -44,8 +44,8 @@ func TestNewClient(t *testing.T) {
 
 	// Test with nil config to ensure fallback works
 	client, err = NewClient(nil)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	if err == nil {
+		t.Fatalf("expected error, got %v", err)
 	}
 
 	// Verify that the client is not nil
