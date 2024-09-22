@@ -22,7 +22,7 @@ jobs:
         with:
           go-version: "^1.22.6"
 
-      - name: Go Test and Helm Lint
+      - name: Go Test, Vuln Check and Helm Lint
         id: test
         run: |
           make test
