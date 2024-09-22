@@ -7,6 +7,8 @@ resource "google_service_account_iam_member" "this" {
   service_account_id = google_service_account.gke_preemptible_sniper.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[gke-preemptible-sniper/gke-preemptible-sniper]"
+
+  depends_on = [google_container_cluster.this]
 }
 
 resource "google_project_iam_member" "this" {
