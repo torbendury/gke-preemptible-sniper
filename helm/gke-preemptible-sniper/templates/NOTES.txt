@@ -2,4 +2,4 @@ Congratulations on installing torbendury/gke-preemptible-sniper!
 
 The controller should soon start annotating preemptible GKE nodes in the cluster.
 Watch it work with the following command:
-  $ kubectl get nodes -o custom-columns=NAME:.metadata.name,PREEMPTIBLE:.metadata.labels['cloud\.google\.com/gke-preemptible']
+  $ kubectl get nodes -o="custom-columns=NAME:.metadata.name,PREEMPTIBLE:.metadata.labels['cloud\.google\.com/gke-preemptible'],SNIPER_ANNOTATION:.metadata.annotations['gke-preemptible-sniper/timestamp']"
