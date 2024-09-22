@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "feature/*"
+      - "dependabot/*"
   workflow_call:
     outputs:
       overall-result:
