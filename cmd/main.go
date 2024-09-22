@@ -27,6 +27,7 @@ var allowedTimes timing.TimeSlots
 var blockedTimes timing.TimeSlots
 
 var checkInterval int
+var nodeDrainTimeout int
 
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -78,7 +79,17 @@ func init() {
 		os.Exit(7)
 	}
 	if checkInterval == 0 {
-		checkInterval = 300
+		checkInterval = 1200
+	}
+
+	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
+	nodeDrainTimeout, err := strconv.Atoi(nodeDrainTimeoutStr)
+	if err != nil {
+		logger.Error("failed to parse NODE_DRAIN_TIMEOUT_SECONDS", "error", err)
+		os.Exit(8)
+	}
+	if nodeDrainTimeout == 0 {
+		nodeDrainTimeout = 300
 	}
 
 	healthy = true
@@ -124,7 +135,7 @@ func main() {
 	// main loop
 	for {
 		logger.Debug("loop iteration for node check")
-		ctx, cancel := getContextWithTimeout(10 * time.Second)
+		ctx, cancel := getContextWithTimeout(time.Duration(checkInterval) * time.Second)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {
@@ -135,7 +146,7 @@ func main() {
 			continue
 		}
 
-		ctx, cancel = getContextWithTimeout(60 * time.Second)
+		ctx, cancel = getContextWithTimeout(time.Duration(nodeDrainTimeout) * time.Second)
 
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
@@ -184,12 +195,12 @@ func main() {
 				}
 				if time.Now().After(t) {
 					logger.Info("node should be deleted", "node", node, "timestamp", t, "now", time.Now())
-					// Cordon and Drain node, after that delete the GCP instance
 					err = kubernetesClient.CordonNode(ctx, node)
 					if err != nil {
 						logger.Error("failed to cordon node", "error", err, "node", node)
 						continue
 					}
+					// we don't need a separate context with timeout since the operations above will take approx 1 second in total
 					err = kubernetesClient.DrainNode(ctx, node)
 					if err != nil {
 						logger.Error("failed to drain node", "error", err, "node", node)

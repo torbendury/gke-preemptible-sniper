@@ -47,11 +47,11 @@ This project is in a very early stage of development. It is not recommended to u
   - [x] Helm Chart
   - [x] GitHub Actions Build
 
-- [ ] gke-preemptible-sniper 0.2.0:
+- [x] gke-preemptible-sniper 0.2.0:
   - [x] allowlist hours
   - [x] blocklist hours
   - [x] configurable check interval
-  - configurable node drain timeout
+  - [x] configurable node drain timeout
 
 - [ ] gke-preemptible-sniper 0.3.0:
   - provide prometheus metrics
