@@ -1,6 +1,14 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Doc
+- CHANGELOG
+- **readme:** new roadmap item
+
+### Hotfix
+- bump version
+- **helm:** ensure interval and timeout seconds to be strings
+
 
 <a name="gke-preemptible-sniper-0.2.0"></a>
 ## [gke-preemptible-sniper-0.2.0] - 2024-09-22
