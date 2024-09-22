@@ -5,3 +5,5 @@
 *.tfstate
 local.tfvars
 .terraform.tfstate.lock.info
+cover.html
+cover.out
