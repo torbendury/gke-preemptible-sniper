@@ -72,8 +72,8 @@ func init() {
 	ready = true
 }
 
-func getContextWithTimeout() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func getContextWithTimeout(td time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), td)
 	return ctx, cancel
 }
 
@@ -111,15 +111,18 @@ func main() {
 	// main loop
 	for {
 		logger.Debug("loop iteration for node check")
-		ctx, cancel := getContextWithTimeout()
+		ctx, cancel := getContextWithTimeout(10 * time.Second)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {
 			logger.Error("failed to get nodes", "error", err)
 			logger.Info("retrying in 10 seconds")
+			cancel()
 			time.Sleep(10 * time.Second)
 			continue
 		}
+
+		ctx, cancel = getContextWithTimeout(60 * time.Second)
 
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
