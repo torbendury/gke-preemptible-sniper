@@ -1,0 +1,24 @@
+- name: e2-c24-hdd50-pre
+  machine_type: e2-custom-2-4096
+  preemptible: true
+  initial_node_count: 1
+  autoscaling:
+    min_node_count: 1
+    max_node_count: 40
+  disk:
+    type: pd-standard
+    size_gb: 50
+  upgrade_settings:
+    max_surge: 2
+    max_unavailable: 0
+  labels:
+    node.gke.torbendury.de/instance-family: e2
+    node.gke.torbendury.de/instance-optimization: gp
+    node.gke.torbendury.de/ram-per-cpu: 2
+    node.gke.torbendury.de/instance-generation-relative: latest
+    node.gke.torbendury.de/instance-generation: 2
+    node.gke.torbendury.de/cpu-generation-relative: previous
+    node.gke.torbendury.de/cpu-vendor: unspecified
+    node.gke.torbendury.de/disk-type: hdd
+    node.gke.torbendury.de/disk-size: 50
+    node.gke.torbendury.de/cheapest-instance: true

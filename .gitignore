@@ -1,2 +1,7 @@
 *.tar
 .vscode/
+.terraform
+.terraform.lock.hcl
+*.tfstate
+local.tfvars
+.terraform.tfstate.lock.info
