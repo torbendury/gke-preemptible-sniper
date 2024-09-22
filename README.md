@@ -48,8 +48,8 @@ This project is in a very early stage of development. It is not recommended to u
   - [x] GitHub Actions Build
 
 - [ ] gke-preemptible-sniper 0.2.0:
-  - allowlist hours
-  - blocklist hours
+  - [x] allowlist hours
+  - [x] blocklist hours
   - configurable check interval
   - configurable node drain timeout
 
