@@ -1,0 +1,61 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # Git style
+      - id: check-added-large-files
+        name: General Large File Check
+      - id: check-merge-conflict
+        name: General Merge Conflict Check
+      - id: check-vcs-permalinks
+        name: General VCS Permalink Check
+      # Common errors
+      - id: end-of-file-fixer
+        name: Fix EOF Newline
+      - id: trailing-whitespace
+        name: Fix Trailing Whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-yaml
+        name: Check YAML
+        exclude: ^helm/gke-preemptible-sniper/templates/
+      - id: check-executables-have-shebangs
+        name: Check Executables for Shebangs
+      # Cross platform
+      - id: check-case-conflict
+        name: Check Case Conflicts
+      - id: mixed-line-ending
+        name: Check Mixed EOF
+        args: [--fix=lf]
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shfmt
+        name: Shell Script Formatting
+        args: ["-l", "-i", "2", "-ci", "-sr", "-w"]
+      - id: shellcheck
+        name: Shell Script Checks
+        args: ["--severity=warning"]
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.23
+    hooks:
+      - id: helmlint
+        name: Helm Chart Linting
+  - repo: https://github.com/Bahjat/pre-commit-golang
+    rev: v1.0.3
+    hooks:
+      - id: go-fmt-import
+        name: Check Imports and Formatting
+      - id: go-vet
+        name: Check Code Health
+      - id: go-lint
+        name: Go Linting
+      - id: go-unit-tests
+        name: Run Unit Tests
+      - id: go-static-check # install https://staticcheck.io/docs/
+        name: Go Static Checks
+  - repo: local
+    hooks:
+      - id: changelog
+        language: system
+        name: Changelog
+        entry: /bin/bash -c 'docker run -u 1000:1000 --rm -v $(pwd):/workdir quay.io/git-chglog/git-chglog > CHANGELOG.md'
