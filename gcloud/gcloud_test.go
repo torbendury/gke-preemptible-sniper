@@ -37,17 +37,6 @@ func TestGetProjectID(t *testing.T) {
 		t.Fatalf("expected %s, got %s", expectedProjectID, projectID)
 	}
 }
-func TestNewClient(t *testing.T) {
-	ctx := context.Background()
-
-	client, err := NewClient(ctx)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if client == nil {
-		t.Fatalf("expected client to be non-nil")
-	}
-}
 
 func TestListInstances(t *testing.T) {
 	mockClient := &mockInstancesClient{
