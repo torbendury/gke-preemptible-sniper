@@ -61,3 +61,6 @@ This project is in a very early stage of development. It is not recommended to u
 - [ ] gke-preemptible-sniper 0.4.0:
   - allow running outside cluster
   - read kubeconfig
+
+- [ ] gke-preemptible-sniper 0.5.0:
+  - [ ] process nodes concurrently
