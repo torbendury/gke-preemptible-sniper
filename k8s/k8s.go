@@ -207,6 +207,20 @@ func (c *Client) GetNodeLabel(ctx context.Context, nodeName, key string) (string
 	return value, nil
 }
 
+func (c *Client) HasNodeLabel(ctx context.Context, nodeName, key string) (bool, error) {
+	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	if node.Labels == nil {
+		return false, nil
+	}
+
+	_, exists := node.Labels[key]
+	return exists, nil
+}
+
 func (c *Client) GetNodeZone(ctx context.Context, nodeName string) (string, error) {
 	l, err := c.GetNodeLabel(ctx, nodeName, "topology.kubernetes.io/zone")
 	if err != nil {

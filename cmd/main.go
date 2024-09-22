@@ -103,15 +103,15 @@ func main() {
 			hasAnnotation, err := kubernetesClient.HasNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
 			if !hasAnnotation {
 				if err != nil {
-					logger.Error("failed to check annotation", "error", err, "node", node)
+					logger.Error("failed to check sniper annotation", "error", err, "node", node)
 					continue
 				}
-				preemptibleAnnotation, err := kubernetesClient.GetNodeAnnotation(ctx, node, "cloud.google.com/gke-preemptible")
+				preemptibleAnnotation, err := kubernetesClient.HasNodeLabel(ctx, node, "cloud.google.com/gke-preemptible")
 				if err != nil {
-					logger.Error("failed to check preemptible annotation", "error", err, "node", node)
+					logger.Error("failed to check preemptible label", "error", err, "node", node)
 					continue
 				}
-				if preemptibleAnnotation != "true" {
+				if !preemptibleAnnotation {
 					logger.Info("node is not preemptible", "node", node)
 					continue
 				}

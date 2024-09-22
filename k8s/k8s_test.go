@@ -285,3 +285,28 @@ func TestGetNodeZone(t *testing.T) {
 		t.Fatalf("expected zone1, got %v", zone)
 	}
 }
+
+func TestHasNodeLabel(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	// Create a mock client
+	client := GetMockClient()
+
+	// Create mock node in client
+	client.client.CoreV1().Nodes().Create(context.TODO(), &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "node1",
+			Labels: map[string]string{"key": "value"},
+		},
+	}, metav1.CreateOptions{})
+
+	// Check if node has label
+	hasLabel, err := client.HasNodeLabel(context.TODO(), "node1", "key")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !hasLabel {
+		t.Fatalf("expected label, got none")
+	}
+}
