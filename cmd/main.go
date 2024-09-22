@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,8 @@ var ready bool
 
 var allowedTimes timing.TimeSlots
 var blockedTimes timing.TimeSlots
+
+var checkInterval int
 
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -66,6 +69,16 @@ func init() {
 			logger.Error("failed to parse BLOCKED_HOURS", "error", err)
 			os.Exit(6)
 		}
+	}
+
+	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
+	checkInterval, err := strconv.Atoi(checkIntervalStr)
+	if err != nil {
+		logger.Error("failed to parse CHECK_INTERVAL_SECONDS", "error", err)
+		os.Exit(7)
+	}
+	if checkInterval == 0 {
+		checkInterval = 300
 	}
 
 	healthy = true
@@ -204,6 +217,6 @@ func main() {
 			}
 		}
 		cancel()
-		time.Sleep(300 * time.Second)
+		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}
 }

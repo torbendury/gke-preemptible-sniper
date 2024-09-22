@@ -64,7 +64,8 @@ readinessProbe:
     path: /readyz
     port: http
 
-# by default, gke-preemptible-sniper will be allowed to run at any time
+# by default, gke-preemptible-sniper will be allowed to run at any time and will check every 5 minutes
 time:
   allowList: "00:00-23:59"
   blockList: ""
+  checkIntervalSeconds: 300
