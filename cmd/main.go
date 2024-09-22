@@ -19,7 +19,7 @@ var projectID string
 var logger *slog.Logger
 
 func init() {
-	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	var err error
 	kubernetesClient, err = k8s.NewClient(nil)
@@ -41,10 +41,9 @@ func init() {
 	}
 }
 
-func getContextWithTimeout() context.Context {
+func getContextWithTimeout() (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	return ctx
+	return ctx, cancel
 }
 
 func main() {
@@ -54,11 +53,11 @@ func main() {
 	// main loop
 	for {
 		logger.Debug("loop iteration for node check")
-		ctx := getContextWithTimeout()
+		ctx, cancel := getContextWithTimeout()
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {
-			logger.Error("failed to get nodes: %v", "error", err)
+			logger.Error("failed to get nodes", "error", err)
 			logger.Info("retrying in 10 seconds")
 			time.Sleep(10 * time.Second)
 			continue
@@ -141,6 +140,7 @@ func main() {
 				}
 			}
 		}
+		cancel()
 		time.Sleep(300 * time.Second)
 	}
 }
