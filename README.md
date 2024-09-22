@@ -41,11 +41,11 @@ This project is in a very early stage of development. It is not recommended to u
   - [x] get VM instance in GCP
   - [x] delete VM instance in GCP
 
-- [ ] gke-preemptible-sniper 0.1.0:
-  - Containerize
-  - Publish to DockerHub
-  - Helm Chart
-  - GitHub Actions Build
+- [x] gke-preemptible-sniper 0.1.0:
+  - [x] Containerize
+  - [x] Publish to DockerHub
+  - [x] Helm Chart
+  - [x] GitHub Actions Build
 
 - [ ] gke-preemptible-sniper 0.2.0:
   - allowlist hours
