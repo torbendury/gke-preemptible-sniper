@@ -142,7 +142,6 @@ func main() {
 
 	go func() {
 		for {
-			logger.Info("updating sniped metrics")
 			stats.UpdateSnipedInLastHour()
 			stats.UpdateSnipesExpectedInNextHour()
 			time.Sleep(2 * time.Minute)
@@ -301,7 +300,6 @@ func processNode(ctx context.Context, node string) error {
 			logger.Info("node has time to live left", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
 
 			if duration < time.Hour {
-				logger.Info("adding node to expected snipes metrics", "node", node, "timestamp", t)
 				stats.AddExpectedSnipe(node, t)
 			}
 		}
