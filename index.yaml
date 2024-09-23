@@ -2,6 +2,17 @@ apiVersion: v1
 entries:
   gke-preemptible-sniper:
   - apiVersion: v2
+    appVersion: b1a5fbc
+    created: "2024-09-23T09:33:33.61845519Z"
+    description: A Kubernetes controller to spread preemption for preemtible VMs in
+      GKE to avoid mass deletion after 24 hours. In respect to `estafette-gke-preemptible-killer`.
+    digest: 02a06db6fa48afbd73e2c229407636ff1b6f89c31d8defed6597c622ea958810
+    name: gke-preemptible-sniper
+    type: application
+    urls:
+    - https://github.com/torbendury/gke-preemptible-sniper/releases/download/gke-preemptible-sniper-0.2.5/gke-preemptible-sniper-0.2.5.tgz
+    version: 0.2.5
+  - apiVersion: v2
     appVersion: d326952
     created: "2024-09-23T09:00:05.185243867Z"
     description: A Kubernetes controller to spread preemption for preemtible VMs in
@@ -100,4 +111,4 @@ entries:
     urls:
     - https://github.com/torbendury/gke-preemptible-sniper/releases/download/gke-preemptible-sniper-0.0.0/gke-preemptible-sniper-0.0.0.tgz
     version: 0.0.0
-generated: "2024-09-23T09:00:05.185285254Z"
+generated: "2024-09-23T09:33:33.618508831Z"
