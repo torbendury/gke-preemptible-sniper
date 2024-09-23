@@ -39,11 +39,15 @@ func init() {
 		os.Exit(1)
 	}
 
+	logger.Info("created Kubernetes client")
+
 	googleClient, err = gcloud.NewClient(context.Background())
 	if err != nil {
 		logger.Error("failed to create Google Cloud client", "error", err)
 		os.Exit(2)
 	}
+
+	logger.Info("created Google Cloud client")
 
 	// Get the project ID
 	projectID, err = gcloud.GetProjectID()
@@ -51,6 +55,8 @@ func init() {
 		logger.Error("failed to get project ID", "error", err)
 		os.Exit(3)
 	}
+
+	logger.Info("got project ID", "project", projectID)
 
 	allowedHours := os.Getenv("ALLOWED_HOURS")
 	if allowedHours == "" {
@@ -63,6 +69,8 @@ func init() {
 		os.Exit(5)
 	}
 
+	logger.Info("parsed allowed hours", "times", allowedTimes)
+
 	blockedHours := os.Getenv("BLOCKED_HOURS")
 	if blockedHours != "" {
 		blockedTimes, err = timing.ParseTimeSlots(strings.Split(blockedHours, ","))
@@ -71,6 +79,8 @@ func init() {
 			os.Exit(6)
 		}
 	}
+
+	logger.Info("parsed blocked hours", "times", blockedTimes)
 
 	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
 	checkInterval, err := strconv.Atoi(checkIntervalStr)
@@ -82,6 +92,8 @@ func init() {
 		checkInterval = 1200
 	}
 
+	logger.Info("parsed check interval", "interval", checkInterval)
+
 	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
 	nodeDrainTimeout, err := strconv.Atoi(nodeDrainTimeoutStr)
 	if err != nil {
@@ -91,6 +103,8 @@ func init() {
 	if nodeDrainTimeout == 0 {
 		nodeDrainTimeout = 300
 	}
+
+	logger.Info("parsed node drain timeout", "timeout", nodeDrainTimeout)
 
 	healthy = true
 	ready = true
@@ -130,7 +144,10 @@ func main() {
 	// main loop
 	for {
 		logger.Debug("loop iteration for node check")
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(checkInterval)*time.Second)
+		// TODO remove log output later
+		timeout := time.Duration(checkInterval) * time.Second
+		logger.Info("checking nodes in the cluster", "timeout", timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {

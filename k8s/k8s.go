@@ -43,6 +43,10 @@ func NewClient(config *rest.Config) (*Client, error) {
 		}
 	}
 
+	// Disable client request limiting
+	config.QPS = 100
+	config.Burst = 500
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
