@@ -4,6 +4,18 @@
 ### Chore
 - log successfully deleted instances + sleep mode
 
+### Doc
+- testing
+- CHANGELOG
+
+### Feat
+- **main:** let errors be handled by error budget functionality
+- **main:** introduce error budget errors cause the budget to decrease over time, after a decrease the application will try to heal itself
+
+### Refactor
+- **main:** separate out checking error budget in main loop
+- **main:** separate out loop functionality
+
 
 <a name="gke-preemptible-sniper-0.2.12"></a>
 ## [gke-preemptible-sniper-0.2.12] - 2024-09-23

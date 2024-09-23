@@ -11,25 +11,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/torbendury/gke-preemptible-sniper/gcloud"
 	"github.com/torbendury/gke-preemptible-sniper/k8s"
+	"github.com/torbendury/gke-preemptible-sniper/stats"
 	"github.com/torbendury/gke-preemptible-sniper/timing"
 )
 
-var kubernetesClient *k8s.Client
-var googleClient *gcloud.Client
-var projectID string
+var (
+	allowedTimes     timing.TimeSlots // allowed times for node delete scheduling
+	blockedTimes     timing.TimeSlots // blocked times for node delete scheduling
+	checkInterval    int              // interval in seconds for checking nodes
+	googleClient     *gcloud.Client   // Google Cloud client
+	healthy          bool             // health status
+	kubernetesClient *k8s.Client      // Kubernetes client
+	logger           *slog.Logger     // logger
+	nodeDrainTimeout int              // timeout in seconds for draining a node
+	projectID        string           // Google Cloud project ID
+	ready            bool             // readiness status
 
-var logger *slog.Logger
-
-var healthy bool
-var ready bool
-
-var allowedTimes timing.TimeSlots
-var blockedTimes timing.TimeSlots
-
-var checkInterval int
-var nodeDrainTimeout int
+)
 
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -141,12 +142,22 @@ func main() {
 		}
 	})
 
+	http.Handle("/metrics", promhttp.HandlerFor(stats.Reg, promhttp.HandlerOpts{}))
+
 	go func() {
 		logger.Info("starting HTTP server for health checks")
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			logger.Error("HTTP server error", "error", err)
 			googleClient.Close()
 			os.Exit(4)
+		}
+	}()
+
+	go func() {
+		for {
+			stats.UpdateSnipedInLastHour()
+			stats.UpdateSnipesExpectedInNextHour()
+			time.Sleep(2 * time.Minute)
 		}
 	}()
 
@@ -292,9 +303,14 @@ func processNode(ctx context.Context, node string) error {
 				return err
 			}
 			logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
+			stats.AddSnipedNode(instance, time.Now())
 		} else {
 			duration := time.Until(t)
 			logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
+			// If the duration is less than 1 hour, add the node to the to-be-sniped list
+			if duration < time.Hour {
+				stats.AddExpectedSnipe(node, t)
+			}
 		}
 	}
 	return nil
