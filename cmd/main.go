@@ -99,13 +99,17 @@ func init() {
 	logger.Info("parsed check interval", "interval", checkInterval)
 
 	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
-	nodeDrainTimeout, err := strconv.Atoi(nodeDrainTimeoutStr)
-	if err != nil {
-		logger.Error("failed to parse NODE_DRAIN_TIMEOUT_SECONDS", "error", err)
-		os.Exit(8)
-	}
-	if nodeDrainTimeout == 0 {
+	if nodeDrainTimeoutStr == "" {
 		nodeDrainTimeout = 300
+	} else {
+		nodeDrainTimeout, err := strconv.Atoi(nodeDrainTimeoutStr)
+		if err != nil {
+			logger.Error("failed to parse NODE_DRAIN_TIMEOUT_SECONDS", "error", err)
+			os.Exit(8)
+		}
+		if nodeDrainTimeout == 0 {
+			nodeDrainTimeout = 300
+		}
 	}
 
 	logger.Info("parsed node drain timeout", "timeout", nodeDrainTimeout)
@@ -241,6 +245,8 @@ func main() {
 						logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
 						continue
 					}
+				} else {
+					logger.Info("node should not be deleted yet", "node", node, "left", time.Until(t))
 				}
 			}
 		}
