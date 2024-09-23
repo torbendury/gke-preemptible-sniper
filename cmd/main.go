@@ -179,9 +179,7 @@ func main() {
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {
 			logger.Error("failed to get nodes", "error", err)
-			logger.Info("retrying in 10 seconds")
 			cancel()
-			time.Sleep(10 * time.Second)
 			errorBudget--
 			continue
 		}
