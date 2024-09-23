@@ -29,6 +29,12 @@ helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-snipe
 
 This project is in a very early stage of development. It is not recommended to use it in production environments yet.
 
+## Testing
+
+There are unit tests for the most important parts of the application.
+
+Also, I e2e-tested the application by running it in a Google Kubernetes cluster and let it delete several preemptible nodes. Due to cost reasons this is not going to be part of the CI pipeline.
+
 ## Roadmap
 
 - [x] gke-preemptible-sniper 0.0.0:
