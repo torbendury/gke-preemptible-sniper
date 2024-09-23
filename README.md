@@ -68,14 +68,21 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
   - [x] configurable check interval
   - [x] configurable node drain timeout
 
-- [ ] gke-preemptible-sniper 0.3.0:
+- [x] gke-preemptible-sniper 0.3.0:
   - [x] provide prometheus metrics
-  - [ ] allow filtering out nodes by node label
   - [x] introduce error budget
 
 - [ ] gke-preemptible-sniper 0.4.0:
-  - allow running outside cluster
-  - read kubeconfig
+  - [ ] allow running outside cluster
+  - [ ] read prepared kubeconfig
 
 - [ ] gke-preemptible-sniper 0.5.0:
   - [ ] process nodes concurrently
+
+- [ ] gke-preemptible-sniper 0.6.0:
+  - [ ] allow filtering out nodes by node label
+
+- [ ] gke-preemptible-sniper 1.0.0:
+  - [ ] stabilization
+  - [ ] sensible defaults
+  - [ ] documentation
