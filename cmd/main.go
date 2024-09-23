@@ -42,24 +42,17 @@ func init() {
 		os.Exit(1)
 	}
 
-	logger.Info("created Kubernetes client")
-
 	googleClient, err = gcloud.NewClient(context.Background())
 	if err != nil {
 		logger.Error("failed to create Google Cloud client", "error", err)
 		os.Exit(2)
 	}
 
-	logger.Info("created Google Cloud client")
-
-	// Get the project ID
 	projectID, err = gcloud.GetProjectID()
 	if err != nil {
 		logger.Error("failed to get project ID", "error", err)
 		os.Exit(3)
 	}
-
-	logger.Info("got project ID", "project", projectID)
 
 	allowedHours := os.Getenv("ALLOWED_HOURS")
 	if allowedHours == "" {
@@ -72,8 +65,6 @@ func init() {
 		os.Exit(5)
 	}
 
-	logger.Info("parsed allowed hours", "times", allowedTimes)
-
 	blockedHours := os.Getenv("BLOCKED_HOURS")
 	if blockedHours != "" {
 		blockedTimes, err = timing.ParseTimeSlots(strings.Split(blockedHours, ","))
@@ -82,8 +73,6 @@ func init() {
 			os.Exit(6)
 		}
 	}
-
-	logger.Info("parsed blocked hours", "times", blockedTimes)
 
 	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
 	if checkIntervalStr == "" {
@@ -99,8 +88,6 @@ func init() {
 		}
 	}
 
-	logger.Info("parsed check interval", "interval", checkInterval)
-
 	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
 	if nodeDrainTimeoutStr == "" {
 		nodeDrainTimeout = 300
@@ -115,10 +102,10 @@ func init() {
 		nodeDrainTimeout = 300
 	}
 
-	logger.Info("parsed node drain timeout", "timeout", nodeDrainTimeout)
-
 	healthy = true
 	ready = true
+
+	logger.Info("initialized", "project", projectID, "allowed", allowedTimes, "blocked", blockedTimes, "checkInterval", checkInterval, "nodeDrainTimeout", nodeDrainTimeout)
 }
 
 func main() {
@@ -158,7 +145,6 @@ func main() {
 			logger.Info("updating sniped metrics")
 			stats.UpdateSnipedInLastHour()
 			stats.UpdateSnipesExpectedInNextHour()
-			logger.Info("updated", "sniped", stats.SnipedInLastHour, "expected", stats.SnipesExpectedInNextHour)
 			time.Sleep(2 * time.Minute)
 		}
 	}()
@@ -172,7 +158,6 @@ func main() {
 
 		checkErrorBudget(errorBudget)
 
-		logger.Info("loop iteration for node check")
 		timeout := time.Duration(checkInterval) * time.Second
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
@@ -231,7 +216,7 @@ func processNode(ctx context.Context, node string) error {
 			return err
 		}
 		if !preemptibleAnnotation {
-			logger.Info("node is not preemptible", "node", node)
+			logger.Info("skipping non-preemptible", "node", node)
 			return nil
 		}
 
@@ -262,14 +247,14 @@ func processNode(ctx context.Context, node string) error {
 			return err
 		}
 		if time.Now().After(t) {
-			logger.Info("node should be deleted", "node", node, "timestamp", t, "now", time.Now())
+			logger.Info("cordoning", "node", node)
 			err = kubernetesClient.CordonNode(ctx, node)
 			if err != nil {
 				logger.Error("failed to cordon node", "error", err, "node", node)
 				return err
 			}
-			// we don't need a separate context with timeout since the operations above will take approx 1 second in total
 			drainCtx, drainCancel := context.WithTimeout(context.Background(), time.Duration(nodeDrainTimeout)*time.Second)
+			logger.Info("draining", "node", node)
 			err = kubernetesClient.DrainNode(drainCtx, node)
 			if err != nil {
 				logger.Error("failed to drain node", "error", err, "node", node)
@@ -277,8 +262,8 @@ func processNode(ctx context.Context, node string) error {
 				return err
 			}
 			drainCancel()
+			time.Sleep(10 * time.Second)
 
-			// Get the instance name from the node
 			instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
 			if err != nil {
 				logger.Error("failed to get instance name", "error", err, "node", node)
@@ -288,7 +273,6 @@ func processNode(ctx context.Context, node string) error {
 				return errors.New("instance name is empty")
 			}
 
-			// get the zone from the node
 			zone, err := kubernetesClient.GetNodeZone(ctx, node)
 			if err != nil {
 				logger.Error("failed to get zone", "error", err, "node", node)
@@ -298,19 +282,18 @@ func processNode(ctx context.Context, node string) error {
 				return errors.New("zone is empty")
 			}
 
-			// Delete the instance
+			logger.Info("deleting instance", "instance", instance, "zone", zone, "node", node)
 			err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
 			if err != nil {
 				logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
 				return err
 			}
 			logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
-			logger.Info("adding node to sniped metrics", "node", node)
 			stats.AddSnipedNode(instance, time.Now())
 		} else {
 			duration := time.Until(t)
-			logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
-			// If the duration is less than 1 hour, add the node to the to-be-sniped list
+			logger.Info("node has time to live left", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
+
 			if duration < time.Hour {
 				logger.Info("adding node to expected snipes metrics", "node", node, "timestamp", t)
 				stats.AddExpectedSnipe(node, t)
