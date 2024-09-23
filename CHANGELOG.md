@@ -1,6 +1,30 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Chore
+- log successfully deleted instances + sleep mode
+
+
+<a name="gke-preemptible-sniper-0.2.12"></a>
+## [gke-preemptible-sniper-0.2.12] - 2024-09-23
+### Fix
+- **helm-chart:** workload identity annotation
+
+
+<a name="gke-preemptible-sniper-0.2.11"></a>
+## [gke-preemptible-sniper-0.2.11] - 2024-09-23
+### Chore
+- bump version
+
+### Feat
+- **helm-chart:** use workload identity
+
+
+<a name="gke-preemptible-sniper-0.2.10"></a>
+## [gke-preemptible-sniper-0.2.10] - 2024-09-23
+### Debug
+- **main:** check for empty instance and zone labels
+
 ### Fix
 - **google:** leave client closing to caller
 
@@ -176,7 +200,10 @@
 - different clients for kubernetes and GCP, move init into their own function
 
 
-[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.8...HEAD
+[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.12...HEAD
+[gke-preemptible-sniper-0.2.12]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.11...gke-preemptible-sniper-0.2.12
+[gke-preemptible-sniper-0.2.11]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.10...gke-preemptible-sniper-0.2.11
+[gke-preemptible-sniper-0.2.10]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.8...gke-preemptible-sniper-0.2.10
 [gke-preemptible-sniper-0.2.8]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.7...gke-preemptible-sniper-0.2.8
 [gke-preemptible-sniper-0.2.7]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.6...gke-preemptible-sniper-0.2.7
 [gke-preemptible-sniper-0.2.6]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.5...gke-preemptible-sniper-0.2.6
