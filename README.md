@@ -95,3 +95,5 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
   - [ ] stabilization
   - [ ] sensible defaults
   - [ ] documentation
+  - [ ] logging improvements
+  - [ ] error budget improvements
