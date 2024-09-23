@@ -1,5 +1,5 @@
 .RECIPEPREFIX = >
-.PHONY: test unittest gohealth allchecks staticcheck govuln build helm
+.PHONY: test unittest gohealth allchecks staticcheck govuln build helm helmtest
 
 ### Variables
 RELEASE_IMAGE_NAME := torbendury/gke-preemptible-sniper
@@ -32,3 +32,8 @@ helm:
 > helm repo add gke-preemptible-sniper https://torbendury.github.io/gke-preemptible-sniper/ || true
 > helm repo update
 > helm upgrade --install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace
+
+helmtest:
+> helm repo add gke-preemptible-sniper https://torbendury.github.io/gke-preemptible-sniper/ || true
+> helm repo update
+> helm upgrade --install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace --values .local/values.yaml
