@@ -103,14 +103,14 @@ func init() {
 	if nodeDrainTimeoutStr == "" {
 		nodeDrainTimeout = 300
 	} else {
-		nodeDrainTimeout, err := strconv.Atoi(nodeDrainTimeoutStr)
+		nodeDrainTimeout, err = strconv.Atoi(nodeDrainTimeoutStr)
 		if err != nil {
 			logger.Error("failed to parse NODE_DRAIN_TIMEOUT_SECONDS", "error", err)
 			os.Exit(8)
 		}
-		if nodeDrainTimeout == 0 {
-			nodeDrainTimeout = 300
-		}
+	}
+	if nodeDrainTimeout <= 0 {
+		nodeDrainTimeout = 300
 	}
 
 	logger.Info("parsed node drain timeout", "timeout", nodeDrainTimeout)
@@ -228,6 +228,7 @@ func main() {
 						continue
 					}
 					drainCancel()
+
 					// Get the instance name from the node
 					instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
 					if err != nil {
