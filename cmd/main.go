@@ -151,12 +151,28 @@ func main() {
 
 	logger.Info("starting gke-preemptible-sniper")
 
+	errorBudget := 5
+
 	// main loop
 	for {
-		logger.Debug("loop iteration for node check")
-		// TODO remove log output later
+
+		if errorBudget > 5 {
+			errorBudget = 5
+		}
+		if errorBudget <= 0 {
+			logger.Error("error budget exceeded, trying to recover")
+			healthy = false
+			ready = false
+			time.Sleep(10 * time.Second)
+			errorBudget++
+			continue
+		} else {
+			healthy = true
+			ready = true
+		}
+
+		logger.Info("loop iteration for node check")
 		timeout := time.Duration(checkInterval) * time.Second
-		logger.Info("checking nodes in the cluster", "timeout", timeout)
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
@@ -165,6 +181,7 @@ func main() {
 			logger.Info("retrying in 10 seconds")
 			cancel()
 			time.Sleep(10 * time.Second)
+			errorBudget--
 			continue
 		}
 
@@ -175,11 +192,13 @@ func main() {
 			if !hasAnnotation {
 				if err != nil {
 					logger.Error("failed to check sniper annotation", "error", err, "node", node)
+					errorBudget--
 					continue
 				}
 				preemptibleAnnotation, err := kubernetesClient.HasNodeLabel(ctx, node, "cloud.google.com/gke-preemptible")
 				if err != nil {
 					logger.Error("failed to check preemptible label", "error", err, "node", node)
+					errorBudget--
 					continue
 				}
 				if !preemptibleAnnotation {
@@ -190,6 +209,7 @@ func main() {
 				randTime, err := timing.CreateAllowedTime(allowedTimes, blockedTimes)
 				if err != nil {
 					logger.Error("failed to create allowed time", "error", err)
+					errorBudget--
 					continue
 				}
 
@@ -197,6 +217,7 @@ func main() {
 				err = kubernetesClient.SetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp", randTime.Format(time.RFC3339))
 				if err != nil {
 					logger.Error("failed to add annotation", "error", err, "node", node)
+					errorBudget--
 					continue
 				}
 			} else {
@@ -205,12 +226,14 @@ func main() {
 				timestamp, err := kubernetesClient.GetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
 				if err != nil {
 					logger.Error("failed to check annotation", "error", err, "node", node)
+					errorBudget--
 					continue
 				}
 				layout := time.RFC3339
 				t, err := time.Parse(layout, timestamp)
 				if err != nil {
 					logger.Error("failed to parse time", "error", err, "node", node, "timestamp", timestamp)
+					errorBudget--
 					continue
 				}
 				if time.Now().After(t) {
@@ -218,6 +241,7 @@ func main() {
 					err = kubernetesClient.CordonNode(ctx, node)
 					if err != nil {
 						logger.Error("failed to cordon node", "error", err, "node", node)
+						errorBudget--
 						continue
 					}
 					// we don't need a separate context with timeout since the operations above will take approx 1 second in total
@@ -225,6 +249,7 @@ func main() {
 					err = kubernetesClient.DrainNode(drainCtx, node)
 					if err != nil {
 						logger.Error("failed to drain node", "error", err, "node", node)
+						errorBudget--
 						drainCancel()
 						continue
 					}
@@ -234,9 +259,11 @@ func main() {
 					instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
 					if err != nil {
 						logger.Error("failed to get instance name", "error", err, "node", node)
+						errorBudget--
 					}
 					if instance == "" {
 						logger.Error("instance name is empty", "node", node)
+						errorBudget--
 						continue
 					}
 
@@ -244,9 +271,11 @@ func main() {
 					zone, err := kubernetesClient.GetNodeZone(ctx, node)
 					if err != nil {
 						logger.Error("failed to get zone", "error", err, "node", node)
+						errorBudget--
 					}
 					if zone == "" {
 						logger.Error("zone is empty", "node", node)
+						errorBudget--
 						continue
 					}
 
@@ -254,6 +283,7 @@ func main() {
 					err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
 					if err != nil {
 						logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
+						errorBudget--
 						continue
 					}
 					logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
@@ -264,6 +294,8 @@ func main() {
 			}
 		}
 		cancel()
+		errorBudget++
+
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}

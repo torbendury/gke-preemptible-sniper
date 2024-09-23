@@ -60,9 +60,10 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
   - [x] configurable node drain timeout
 
 - [ ] gke-preemptible-sniper 0.3.0:
-  - provide prometheus metrics
-  - allow filtering out nodes by node label
-  - allow filtering out nodes by pod label
+  - [ ] provide prometheus metrics
+  - [ ] allow filtering out nodes by node label
+  - [ ] allow filtering out nodes by pod label
+  - [x] introduce error budget
 
 - [ ] gke-preemptible-sniper 0.4.0:
   - allow running outside cluster
