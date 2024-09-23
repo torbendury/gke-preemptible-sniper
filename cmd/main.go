@@ -155,8 +155,10 @@ func main() {
 
 	go func() {
 		for {
+			logger.Info("updating sniped metrics")
 			stats.UpdateSnipedInLastHour()
 			stats.UpdateSnipesExpectedInNextHour()
+			logger.Info("updated", "sniped", stats.SnipedInLastHour, "expected", stats.SnipesExpectedInNextHour)
 			time.Sleep(2 * time.Minute)
 		}
 	}()
@@ -303,12 +305,14 @@ func processNode(ctx context.Context, node string) error {
 				return err
 			}
 			logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
+			logger.Info("adding node to sniped metrics", "node", node)
 			stats.AddSnipedNode(instance, time.Now())
 		} else {
 			duration := time.Until(t)
 			logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
 			// If the duration is less than 1 hour, add the node to the to-be-sniped list
 			if duration < time.Hour {
+				logger.Info("adding node to expected snipes metrics", "node", node, "timestamp", t)
 				stats.AddExpectedSnipe(node, t)
 			}
 		}
