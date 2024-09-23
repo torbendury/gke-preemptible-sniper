@@ -256,6 +256,7 @@ func main() {
 						logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
 						continue
 					}
+					logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
 				} else {
 					duration := time.Until(t)
 					logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
@@ -263,6 +264,7 @@ func main() {
 			}
 		}
 		cancel()
+		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}
 }
