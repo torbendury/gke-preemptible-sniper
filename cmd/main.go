@@ -157,20 +157,7 @@ func main() {
 	// main loop
 	for {
 
-		if errorBudget > 5 {
-			errorBudget = 5
-		}
-		if errorBudget <= 0 {
-			logger.Error("error budget exceeded, trying to recover")
-			healthy = false
-			ready = false
-			time.Sleep(10 * time.Second)
-			errorBudget++
-			continue
-		} else {
-			healthy = true
-			ready = true
-		}
+		checkErrorBudget(errorBudget)
 
 		logger.Info("loop iteration for node check")
 		timeout := time.Duration(checkInterval) * time.Second
@@ -198,6 +185,22 @@ func main() {
 
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
+	}
+}
+
+func checkErrorBudget(errorBudget int) {
+	if errorBudget > 5 {
+		errorBudget = 5
+	}
+	if errorBudget <= 0 {
+		logger.Error("error budget exceeded, trying to recover")
+		healthy = false
+		ready = false
+		time.Sleep(10 * time.Second)
+		errorBudget++
+	} else {
+		healthy = true
+		ready = true
 	}
 }
 
