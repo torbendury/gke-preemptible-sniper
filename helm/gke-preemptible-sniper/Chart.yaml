@@ -3,4 +3,4 @@ name: gke-preemptible-sniper
 description: A Kubernetes controller to spread preemption for preemtible VMs in GKE to avoid mass deletion after 24 hours. In respect to `estafette-gke-preemptible-killer`.
 type: application
 version: 0.2.10
-appVersion: "3d61ad3"
+appVersion: "b235443"
