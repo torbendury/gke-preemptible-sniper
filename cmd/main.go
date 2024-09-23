@@ -235,11 +235,19 @@ func main() {
 					if err != nil {
 						logger.Error("failed to get instance name", "error", err, "node", node)
 					}
+					if instance == "" {
+						logger.Error("instance name is empty", "node", node)
+						continue
+					}
 
 					// get the zone from the node
 					zone, err := kubernetesClient.GetNodeZone(ctx, node)
 					if err != nil {
 						logger.Error("failed to get zone", "error", err, "node", node)
+					}
+					if zone == "" {
+						logger.Error("zone is empty", "node", node)
+						continue
 					}
 
 					// Delete the instance
@@ -257,5 +265,4 @@ func main() {
 		cancel()
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}
-	googleClient.Close()
 }

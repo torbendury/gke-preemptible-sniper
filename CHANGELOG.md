@@ -1,7 +1,26 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Fix
+- **google:** leave client closing to caller
+
+
+<a name="gke-preemptible-sniper-0.2.8"></a>
+## [gke-preemptible-sniper-0.2.8] - 2024-09-23
+### Ci
+- **Makefile:** speed up CI, leave out staticcheck/govuln on GH Action
+
+### Fix
+- **k8s:** ensure node drain timeout is greater than zero
+
+
+<a name="gke-preemptible-sniper-0.2.7"></a>
+## [gke-preemptible-sniper-0.2.7] - 2024-09-23
+### Chore
+- **main:** readable time until deletion
+
 ### Doc
+- CHANGELOG
 - **helm-chart:** version clarification
 
 
@@ -157,7 +176,9 @@
 - different clients for kubernetes and GCP, move init into their own function
 
 
-[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.6...HEAD
+[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.8...HEAD
+[gke-preemptible-sniper-0.2.8]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.7...gke-preemptible-sniper-0.2.8
+[gke-preemptible-sniper-0.2.7]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.6...gke-preemptible-sniper-0.2.7
 [gke-preemptible-sniper-0.2.6]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.5...gke-preemptible-sniper-0.2.6
 [gke-preemptible-sniper-0.2.5]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.4...gke-preemptible-sniper-0.2.5
 [gke-preemptible-sniper-0.2.4]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.3...gke-preemptible-sniper-0.2.4

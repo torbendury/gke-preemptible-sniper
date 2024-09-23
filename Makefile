@@ -4,7 +4,7 @@
 ### Variables
 RELEASE_IMAGE_NAME := torbendury/gke-preemptible-sniper
 
-allchecks: test staticcheck govuln 
+allchecks: test staticcheck govuln
 
 ### Run the tests
 test: unittest gohealth
