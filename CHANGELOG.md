@@ -2,15 +2,20 @@
 ## [Unreleased]
 
 ### Chore
+- gomod update
 - log successfully deleted instances + sleep mode
 
 ### Doc
+- roadmap scope
+- roadmap scopes
+- metrics
 - testing
 - CHANGELOG
 
 ### Feat
 - **main:** let errors be handled by error budget functionality
 - **main:** introduce error budget errors cause the budget to decrease over time, after a decrease the application will try to heal itself
+- **metrics:** enable scrapable prometheus metrics
 
 ### Refactor
 - **main:** separate out checking error budget in main loop

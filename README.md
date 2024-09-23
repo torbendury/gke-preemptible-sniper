@@ -4,6 +4,15 @@
 
 Its' purpose is to gracefully remove preemptible nodes from Google Kubernetes clusters before Google Cloud removes them the hard way.
 
+- [gke-preemptible-sniper](#gke-preemptible-sniper)
+  - [Problem solved](#problem-solved)
+  - [Installation](#installation)
+    - [Helm](#helm)
+  - [Metrics](#metrics)
+  - [Development Status](#development-status)
+  - [Testing](#testing)
+  - [Roadmap](#roadmap)
+
 ## Problem solved
 
 `gke-preemptible-sniper` helps in breaking down potentially big disruptions into smaller, more manageable ones. Instead of having a big chunk of your cluster removed at once, you can remove preemptible nodes one by one, giving your cluster time to recover and redistribute the load. This way, you can avoid the situation where your cluster is left with not enough resources to handle the load, since Google Clouds' preemption mechanism is not aware of the state of your cluster and does not necessarily respect disruption budgets of yours.
