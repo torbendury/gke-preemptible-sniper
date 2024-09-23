@@ -83,13 +83,17 @@ func init() {
 	logger.Info("parsed blocked hours", "times", blockedTimes)
 
 	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
-	checkInterval, err := strconv.Atoi(checkIntervalStr)
-	if err != nil {
-		logger.Error("failed to parse CHECK_INTERVAL_SECONDS", "error", err)
-		os.Exit(7)
-	}
-	if checkInterval == 0 {
+	if checkIntervalStr == "" {
 		checkInterval = 1200
+	} else {
+		checkInterval, err = strconv.Atoi(checkIntervalStr)
+		if err != nil {
+			logger.Error("failed to parse CHECK_INTERVAL_SECONDS", "error", err)
+			os.Exit(7)
+		}
+		if checkInterval == 0 {
+			checkInterval = 1200
+		}
 	}
 
 	logger.Info("parsed check interval", "interval", checkInterval)
