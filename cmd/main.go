@@ -76,7 +76,7 @@ func init() {
 
 	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
 	if checkIntervalStr == "" {
-		checkInterval = 1200
+		checkInterval = 300
 	} else {
 		checkInterval, err = strconv.Atoi(checkIntervalStr)
 		if err != nil {
@@ -84,13 +84,13 @@ func init() {
 			os.Exit(7)
 		}
 		if checkInterval == 0 {
-			checkInterval = 1200
+			checkInterval = 300
 		}
 	}
 
 	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
 	if nodeDrainTimeoutStr == "" {
-		nodeDrainTimeout = 300
+		nodeDrainTimeout = 180
 	} else {
 		nodeDrainTimeout, err = strconv.Atoi(nodeDrainTimeoutStr)
 		if err != nil {
@@ -99,7 +99,7 @@ func init() {
 		}
 	}
 	if nodeDrainTimeout <= 0 {
-		nodeDrainTimeout = 300
+		nodeDrainTimeout = 180
 	}
 
 	healthy = true

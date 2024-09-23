@@ -69,5 +69,5 @@ readinessProbe:
 time:
   allowList: "00:00-23:59"
   blockList: ""
-  checkIntervalSeconds: 1200
-  nodeDrainTimeoutSeconds: 300
+  checkIntervalSeconds: 300
+  nodeDrainTimeoutSeconds: 180
