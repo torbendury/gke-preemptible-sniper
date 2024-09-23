@@ -144,6 +144,7 @@ func main() {
 		logger.Info("starting HTTP server for health checks")
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			logger.Error("HTTP server error", "error", err)
+			googleClient.Close()
 			os.Exit(4)
 		}
 	}()
@@ -256,4 +257,5 @@ func main() {
 		cancel()
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}
+	googleClient.Close()
 }

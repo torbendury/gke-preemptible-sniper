@@ -24,8 +24,11 @@ func NewClient(ctx context.Context) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer client.Close()
 	return &Client{client: client}, nil
+}
+
+func (c *Client) Close() error {
+	return c.client.Close()
 }
 
 // GetProjectID retrieves the project ID from the metadata server.
