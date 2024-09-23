@@ -167,15 +167,16 @@ func main() {
 			errorBudget--
 			continue
 		}
-
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
-			err := processNode(ctx, node)
-			if err != nil {
-				logger.Error("failed to process node", "error", err, "node", node)
-				errorBudget--
-				continue
-			}
+			go func(node string) {
+				err := processNode(ctx, node)
+				if err != nil {
+					logger.Error("failed to process node", "error", err, "node", node)
+					errorBudget--
+					return
+				}
+			}(node)
 		}
 		cancel()
 		errorBudget++

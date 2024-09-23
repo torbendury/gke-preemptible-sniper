@@ -81,8 +81,8 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
   - [x] provide prometheus metrics
   - [x] introduce error budget
 
-- [ ] gke-preemptible-sniper 0.4.0:
-  - [ ] process nodes concurrently
+- [x] gke-preemptible-sniper 0.4.0:
+  - [x] process nodes concurrently
 
 - [ ] gke-preemptible-sniper 0.5.0:
   - [ ] allow running outside cluster
