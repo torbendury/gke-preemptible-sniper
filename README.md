@@ -25,6 +25,15 @@ Install the chart:
 helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace
 ```
 
+## Metrics
+
+`gke-preemptible-sniper` provides Prometheus metrics on the `/metrics` endpoint. You can scrape them by configuring a Prometheus instance to scrape the metrics.
+
+| Metric                                             | Description                                            |
+|----------------------------------------------------|--------------------------------------------------------|
+| `gke_preemptible_sniper_sniped_last_hour`          | Number of nodes sniped in the last hour                |
+| `gke_preemptible_sniper_snipes_expected_next_hour` | Number of nodes expected to be sniped in the next hour |
+
 ## Development Status
 
 This project is in a very early stage of development. It is not recommended to use it in production environments yet.
