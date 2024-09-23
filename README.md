@@ -73,11 +73,11 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
   - [x] introduce error budget
 
 - [ ] gke-preemptible-sniper 0.4.0:
-  - [ ] allow running outside cluster
-  - [ ] read prepared kubeconfig
+  - [ ] process nodes concurrently
 
 - [ ] gke-preemptible-sniper 0.5.0:
-  - [ ] process nodes concurrently
+  - [ ] allow running outside cluster
+  - [ ] read prepared kubeconfig
 
 - [ ] gke-preemptible-sniper 0.6.0:
   - [ ] allow filtering out nodes by node label
