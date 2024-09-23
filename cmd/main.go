@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -246,7 +247,8 @@ func main() {
 						continue
 					}
 				} else {
-					logger.Info("node should not be deleted yet", "node", node, "left", time.Until(t))
+					duration := time.Until(t)
+					logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
 				}
 			}
 		}
