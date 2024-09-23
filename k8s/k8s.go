@@ -235,3 +235,7 @@ func (c *Client) GetNodeZone(ctx context.Context, nodeName string) (string, erro
 	}
 	return l, nil
 }
+
+func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
+	return c.client.CoreV1().Nodes().Delete(ctx, nodeName, metav1.DeleteOptions{})
+}

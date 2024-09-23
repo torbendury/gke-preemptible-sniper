@@ -283,6 +283,12 @@ func processNode(ctx context.Context, node string) error {
 			}
 
 			logger.Info("deleting instance", "instance", instance, "zone", zone, "node", node)
+			err = kubernetesClient.DeleteNode(ctx, node)
+			if err != nil {
+				logger.Error("failed to delete node", "error", err, "node", node)
+				return err
+			}
+
 			err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
 			if err != nil {
 				logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
