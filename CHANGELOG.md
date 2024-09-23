@@ -1,11 +1,55 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Doc
+- roadmap scope
+
+### Feat
+- **main:** process nodes concurrently
+
+
+<a name="gke-preemptible-sniper-0.3.5"></a>
+## [gke-preemptible-sniper-0.3.5] - 2024-09-23
+### Fix
+- **helm-chart:** auto-formatter breaking helm templates
+- **rbac:** permit deletion of kubernetes nodes
+
+
+<a name="gke-preemptible-sniper-0.3.4"></a>
+## [gke-preemptible-sniper-0.3.4] - 2024-09-23
+### Chore
+- less verbose logging
+
+
+<a name="gke-preemptible-sniper-0.3.3"></a>
+## [gke-preemptible-sniper-0.3.3] - 2024-09-23
+### Feat
+- **k8s:** allow k8s node deletion together with GCP instance deletion
+
+
+<a name="gke-preemptible-sniper-0.3.2"></a>
+## [gke-preemptible-sniper-0.3.2] - 2024-09-23
+### Feat
+- **logging:** log consolidation and improvements
+
+
+<a name="gke-preemptible-sniper-0.3.1"></a>
+## [gke-preemptible-sniper-0.3.1] - 2024-09-23
+### Debug
+- **metrics:** metrics update logging
+
+### Doc
+- 1.0.0 roadmap
+
+
+<a name="gke-preemptible-sniper-0.3.0"></a>
+## [gke-preemptible-sniper-0.3.0] - 2024-09-23
 ### Chore
 - gomod update
 - log successfully deleted instances + sleep mode
 
 ### Doc
+- TOC
 - roadmap scope
 - roadmap scopes
 - metrics
@@ -217,7 +261,13 @@
 - different clients for kubernetes and GCP, move init into their own function
 
 
-[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.12...HEAD
+[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.5...HEAD
+[gke-preemptible-sniper-0.3.5]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.4...gke-preemptible-sniper-0.3.5
+[gke-preemptible-sniper-0.3.4]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.3...gke-preemptible-sniper-0.3.4
+[gke-preemptible-sniper-0.3.3]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.2...gke-preemptible-sniper-0.3.3
+[gke-preemptible-sniper-0.3.2]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.1...gke-preemptible-sniper-0.3.2
+[gke-preemptible-sniper-0.3.1]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.0...gke-preemptible-sniper-0.3.1
+[gke-preemptible-sniper-0.3.0]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.12...gke-preemptible-sniper-0.3.0
 [gke-preemptible-sniper-0.2.12]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.11...gke-preemptible-sniper-0.2.12
 [gke-preemptible-sniper-0.2.11]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.10...gke-preemptible-sniper-0.2.11
 [gke-preemptible-sniper-0.2.10]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.2.8...gke-preemptible-sniper-0.2.10
