@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -187,110 +188,11 @@ func main() {
 
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
-			logger.Info("checking node", "node", node)
-			hasAnnotation, err := kubernetesClient.HasNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
-			if !hasAnnotation {
-				if err != nil {
-					logger.Error("failed to check sniper annotation", "error", err, "node", node)
-					errorBudget--
-					continue
-				}
-				preemptibleAnnotation, err := kubernetesClient.HasNodeLabel(ctx, node, "cloud.google.com/gke-preemptible")
-				if err != nil {
-					logger.Error("failed to check preemptible label", "error", err, "node", node)
-					errorBudget--
-					continue
-				}
-				if !preemptibleAnnotation {
-					logger.Info("node is not preemptible", "node", node)
-					continue
-				}
-
-				randTime, err := timing.CreateAllowedTime(allowedTimes, blockedTimes)
-				if err != nil {
-					logger.Error("failed to create allowed time", "error", err)
-					errorBudget--
-					continue
-				}
-
-				logger.Info("adding annotation to node", "node", node, "timestamp", randTime.Format(time.RFC3339))
-				err = kubernetesClient.SetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp", randTime.Format(time.RFC3339))
-				if err != nil {
-					logger.Error("failed to add annotation", "error", err, "node", node)
-					errorBudget--
-					continue
-				}
-			} else {
-				logger.Info("node already has annotation", "node", node)
-				// check if the node should be deleted
-				timestamp, err := kubernetesClient.GetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
-				if err != nil {
-					logger.Error("failed to check annotation", "error", err, "node", node)
-					errorBudget--
-					continue
-				}
-				layout := time.RFC3339
-				t, err := time.Parse(layout, timestamp)
-				if err != nil {
-					logger.Error("failed to parse time", "error", err, "node", node, "timestamp", timestamp)
-					errorBudget--
-					continue
-				}
-				if time.Now().After(t) {
-					logger.Info("node should be deleted", "node", node, "timestamp", t, "now", time.Now())
-					err = kubernetesClient.CordonNode(ctx, node)
-					if err != nil {
-						logger.Error("failed to cordon node", "error", err, "node", node)
-						errorBudget--
-						continue
-					}
-					// we don't need a separate context with timeout since the operations above will take approx 1 second in total
-					drainCtx, drainCancel := context.WithTimeout(context.Background(), time.Duration(nodeDrainTimeout)*time.Second)
-					err = kubernetesClient.DrainNode(drainCtx, node)
-					if err != nil {
-						logger.Error("failed to drain node", "error", err, "node", node)
-						errorBudget--
-						drainCancel()
-						continue
-					}
-					drainCancel()
-
-					// Get the instance name from the node
-					instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
-					if err != nil {
-						logger.Error("failed to get instance name", "error", err, "node", node)
-						errorBudget--
-					}
-					if instance == "" {
-						logger.Error("instance name is empty", "node", node)
-						errorBudget--
-						continue
-					}
-
-					// get the zone from the node
-					zone, err := kubernetesClient.GetNodeZone(ctx, node)
-					if err != nil {
-						logger.Error("failed to get zone", "error", err, "node", node)
-						errorBudget--
-					}
-					if zone == "" {
-						logger.Error("zone is empty", "node", node)
-						errorBudget--
-						continue
-					}
-
-					// Delete the instance
-					err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
-					if err != nil {
-						logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
-						errorBudget--
-						continue
-					}
-					logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
-				} else {
-					duration := time.Until(t)
-					logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
-				}
+			err := processNode(ctx, node)
+			if err != nil {
+				logger.Error("failed to process node", "error", err, "node", node)
+				errorBudget--
+				continue
 			}
 		}
 		cancel()
@@ -299,4 +201,100 @@ func main() {
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}
+}
+
+func processNode(ctx context.Context, node string) error {
+	logger.Info("checking node", "node", node)
+	hasAnnotation, err := kubernetesClient.HasNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
+	if !hasAnnotation {
+		if err != nil {
+			logger.Error("failed to check sniper annotation", "error", err, "node", node)
+			return err
+		}
+		preemptibleAnnotation, err := kubernetesClient.HasNodeLabel(ctx, node, "cloud.google.com/gke-preemptible")
+		if err != nil {
+			logger.Error("failed to check preemptible label", "error", err, "node", node)
+			return err
+		}
+		if !preemptibleAnnotation {
+			logger.Info("node is not preemptible", "node", node)
+			return nil
+		}
+
+		randTime, err := timing.CreateAllowedTime(allowedTimes, blockedTimes)
+		if err != nil {
+			logger.Error("failed to create allowed time", "error", err)
+			return err
+		}
+
+		logger.Info("adding annotation to node", "node", node, "timestamp", randTime.Format(time.RFC3339))
+		err = kubernetesClient.SetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp", randTime.Format(time.RFC3339))
+		if err != nil {
+			logger.Error("failed to add annotation", "error", err, "node", node)
+			return err
+		}
+	} else {
+		logger.Info("node already has annotation", "node", node)
+		// check if the node should be deleted
+		timestamp, err := kubernetesClient.GetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
+		if err != nil {
+			logger.Error("failed to check annotation", "error", err, "node", node)
+			return err
+		}
+		layout := time.RFC3339
+		t, err := time.Parse(layout, timestamp)
+		if err != nil {
+			logger.Error("failed to parse time", "error", err, "node", node, "timestamp", timestamp)
+			return err
+		}
+		if time.Now().After(t) {
+			logger.Info("node should be deleted", "node", node, "timestamp", t, "now", time.Now())
+			err = kubernetesClient.CordonNode(ctx, node)
+			if err != nil {
+				logger.Error("failed to cordon node", "error", err, "node", node)
+				return err
+			}
+			// we don't need a separate context with timeout since the operations above will take approx 1 second in total
+			drainCtx, drainCancel := context.WithTimeout(context.Background(), time.Duration(nodeDrainTimeout)*time.Second)
+			err = kubernetesClient.DrainNode(drainCtx, node)
+			if err != nil {
+				logger.Error("failed to drain node", "error", err, "node", node)
+				drainCancel()
+				return err
+			}
+			drainCancel()
+
+			// Get the instance name from the node
+			instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
+			if err != nil {
+				logger.Error("failed to get instance name", "error", err, "node", node)
+			}
+			if instance == "" {
+				logger.Error("instance name is empty", "node", node)
+				return errors.New("instance name is empty")
+			}
+
+			// get the zone from the node
+			zone, err := kubernetesClient.GetNodeZone(ctx, node)
+			if err != nil {
+				logger.Error("failed to get zone", "error", err, "node", node)
+			}
+			if zone == "" {
+				logger.Error("zone is empty", "node", node)
+				return errors.New("zone is empty")
+			}
+
+			// Delete the instance
+			err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
+			if err != nil {
+				logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
+				return err
+			}
+			logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
+		} else {
+			duration := time.Until(t)
+			logger.Info("node should not be deleted yet", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
+		}
+	}
+	return nil
 }
