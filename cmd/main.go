@@ -96,11 +96,6 @@ func init() {
 	ready = true
 }
 
-func getContextWithTimeout(td time.Duration) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), td)
-	return ctx, cancel
-}
-
 func main() {
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if healthy {
@@ -135,7 +130,7 @@ func main() {
 	// main loop
 	for {
 		logger.Debug("loop iteration for node check")
-		ctx, cancel := getContextWithTimeout(time.Duration(checkInterval) * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(checkInterval)*time.Second)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if err != nil {
@@ -145,8 +140,6 @@ func main() {
 			time.Sleep(10 * time.Second)
 			continue
 		}
-
-		ctx, cancel = getContextWithTimeout(time.Duration(nodeDrainTimeout) * time.Second)
 
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
@@ -201,11 +194,14 @@ func main() {
 						continue
 					}
 					// we don't need a separate context with timeout since the operations above will take approx 1 second in total
-					err = kubernetesClient.DrainNode(ctx, node)
+					drainCtx, drainCancel := context.WithTimeout(context.Background(), time.Duration(nodeDrainTimeout)*time.Second)
+					err = kubernetesClient.DrainNode(drainCtx, node)
 					if err != nil {
 						logger.Error("failed to drain node", "error", err, "node", node)
+						drainCancel()
 						continue
 					}
+					drainCancel()
 					// Get the instance name from the node
 					instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
 					if err != nil {
