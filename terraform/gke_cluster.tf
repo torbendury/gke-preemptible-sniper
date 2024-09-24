@@ -1,5 +1,5 @@
 resource "google_container_cluster" "this" {
-  name                        = "gke-preemptinble" # TODO typo correction later
+  name                        = "gke-preemptible"
   location                    = var.zone
   remove_default_node_pool    = true
   default_max_pods_per_node   = 32
