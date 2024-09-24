@@ -45,7 +45,7 @@ helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-snipe
 
 ## Development Status
 
-This project is in a very early stage of development. It is not recommended to use it in production environments yet.
+This project is under active development. While I am using it in production, I cannot guarantee that it will work for you. If you encounter any issues, please open an issue on GitHub.
 
 ## Testing
 
