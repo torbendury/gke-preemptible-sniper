@@ -1,3 +1,5 @@
+// Package gcloud provides a client for interacting with Google Cloud Platform.
+// Is provides methods for listing, deleting, and getting instances, as well as authenticating with the Google Cloud API and retrieving the GCP project ID.
 package gcloud
 
 import (
@@ -12,6 +14,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+// Client is a Google Cloud client.
 type Client struct {
 	client *compute.InstancesClient
 }
@@ -59,6 +62,7 @@ func GetProjectID() (string, error) {
 	return string(body), nil
 }
 
+// ListInstances retrieves a list of instances in the specified project and zone.
 func (c *Client) ListInstances(ctx context.Context, projectID, zone string) ([]*computepb.Instance, error) {
 	req := &computepb.ListInstancesRequest{
 		Project: projectID,
@@ -80,6 +84,7 @@ func (c *Client) ListInstances(ctx context.Context, projectID, zone string) ([]*
 	return instances, nil
 }
 
+// DeleteInstance deletes an instance in the specified project, zone, and instance name.
 func (c *Client) DeleteInstance(ctx context.Context, projectID, zone, instanceName string) error {
 	req := &computepb.DeleteInstanceRequest{
 		Project:  projectID,

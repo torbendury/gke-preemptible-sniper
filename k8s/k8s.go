@@ -1,3 +1,5 @@
+// Package k8s provides a client for interacting with Kubernetes.
+// It provides methods for listing, cordoning, draining, and deleting nodes, as well as setting and getting node annotations and labels.
 package k8s
 
 import (
@@ -17,10 +19,14 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+// Client is a Kubernetes client wrapper.
 type Client struct {
 	client kubernetes.Interface
 }
 
+// NewClient creates a new Kubernetes client using the provided rest.Config and returns a Client.
+// If no config is provided, it will try to use in-cluster config, and if that fails, it will fallback to a kubeconfig file.
+// At the moment, it does not apply client-side rate limiting.
 func NewClient(config *rest.Config) (*Client, error) {
 	var err error
 
@@ -54,6 +60,7 @@ func NewClient(config *rest.Config) (*Client, error) {
 	return &Client{client: clientset}, nil
 }
 
+// GetNodes returns a list of node names in the Kubernetes cluster where the client points to.
 func (c *Client) GetNodes(ctx context.Context) ([]string, error) {
 	nodes, err := c.client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -68,6 +75,8 @@ func (c *Client) GetNodes(ctx context.Context) ([]string, error) {
 	return nodeNames, nil
 }
 
+// CordonNode cordon the node with the provided name.
+// Since no out of the box method is provided by the client-go library, we need to patch the node object to set the spec.unschedulable field to true.
 func (c *Client) CordonNode(ctx context.Context, nodeName string) error {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -96,6 +105,9 @@ func (c *Client) CordonNode(ctx context.Context, nodeName string) error {
 	return err
 }
 
+// DrainNode drains the node with the provided name.
+// It evicts all the pods running on the node, except for the ones in the kube-system namespace.
+// It uses the Eviction API to evict the pods.
 func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 	pods, err := c.client.CoreV1().Pods("").List(ctx, metav1.ListOptions{
 		FieldSelector: "spec.nodeName=" + nodeName,
@@ -118,6 +130,7 @@ func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 	return nil
 }
 
+// evictPod evicts the provided pod.
 func (c *Client) evictPod(ctx context.Context, pod *v1.Pod) error {
 	eviction := &v1beta1.Eviction{
 		ObjectMeta: metav1.ObjectMeta{
@@ -130,6 +143,8 @@ func (c *Client) evictPod(ctx context.Context, pod *v1.Pod) error {
 	return c.client.CoreV1().Pods(pod.Namespace).Evict(ctx, eviction)
 }
 
+// SetNodeAnnotation sets the provided key-value pair as an annotation on the node with the provided name.
+// It uses the Patch API to update the node's annotations.
 func (c *Client) SetNodeAnnotation(ctx context.Context, nodeName, key, value string) error {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -161,6 +176,7 @@ func (c *Client) SetNodeAnnotation(ctx context.Context, nodeName, key, value str
 	return err
 }
 
+// HasNodeAnnotation checks if the node with the provided name has the annotation with the provided key.
 func (c *Client) HasNodeAnnotation(ctx context.Context, nodeName, key string) (bool, error) {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -175,6 +191,7 @@ func (c *Client) HasNodeAnnotation(ctx context.Context, nodeName, key string) (b
 	return exists, nil
 }
 
+// GetNodeAnnotation returns the value of the annotation with the provided key on the node with the provided name.
 func (c *Client) GetNodeAnnotation(ctx context.Context, nodeName, key string) (string, error) {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -193,6 +210,7 @@ func (c *Client) GetNodeAnnotation(ctx context.Context, nodeName, key string) (s
 	return value, nil
 }
 
+// GetNodeLabel returns the value of the label with the provided key on the node with the provided name.
 func (c *Client) GetNodeLabel(ctx context.Context, nodeName, key string) (string, error) {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -211,6 +229,7 @@ func (c *Client) GetNodeLabel(ctx context.Context, nodeName, key string) (string
 	return value, nil
 }
 
+// HasNodeLabel checks if the node with the provided name has the label with the provided key.
 func (c *Client) HasNodeLabel(ctx context.Context, nodeName, key string) (bool, error) {
 	node, err := c.client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
@@ -225,6 +244,8 @@ func (c *Client) HasNodeLabel(ctx context.Context, nodeName, key string) (bool, 
 	return exists, nil
 }
 
+// GetNodeZone returns the zone of the node with the provided name.
+// It first tries to get the zone from the "topology.kubernetes.io/zone" label, and if that fails, it tries to get it from the "failure-domain.beta.kubernetes.io/zone" label.
 func (c *Client) GetNodeZone(ctx context.Context, nodeName string) (string, error) {
 	l, err := c.GetNodeLabel(ctx, nodeName, "topology.kubernetes.io/zone")
 	if err != nil {
@@ -236,6 +257,7 @@ func (c *Client) GetNodeZone(ctx context.Context, nodeName string) (string, erro
 	return l, nil
 }
 
+// DeleteNode deletes the node with the provided name.
 func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
 	return c.client.CoreV1().Nodes().Delete(ctx, nodeName, metav1.DeleteOptions{})
 }
