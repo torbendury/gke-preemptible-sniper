@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -168,7 +169,11 @@ func main() {
 			continue
 		}
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
+
+		var wg sync.WaitGroup
+
 		for _, node := range nodes {
+			wg.Add(1)
 			go func(node string) {
 				nodeCtx, nodeCancel := context.WithTimeout(ctx, timeout)
 				err := processNode(nodeCtx, node)
@@ -179,8 +184,10 @@ func main() {
 					return
 				}
 				nodeCancel()
+				wg.Done()
 			}(node)
 		}
+		wg.Wait()
 		cancel()
 		errorBudget++
 
