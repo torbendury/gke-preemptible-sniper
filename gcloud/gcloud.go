@@ -14,6 +14,10 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+const (
+	MAXIMUM_RETRIES = 3
+)
+
 // Client is a Google Cloud client.
 type Client struct {
 	client *compute.InstancesClient
@@ -44,22 +48,30 @@ func GetProjectID() (string, error) {
 	req.Header.Add("Metadata-Flavor", "Google")
 
 	client := &http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get project ID, status code: %d", resp.StatusCode)
-	}
+	var lastErr error
+	for i := 0; i < MAXIMUM_RETRIES; i++ {
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("failed to get project ID, status code: %d", resp.StatusCode)
+			continue
+		}
 
-	return string(body), nil
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		return string(body), nil
+	}
+	return "", lastErr
 }
 
 // ListInstances retrieves a list of instances in the specified project and zone.
@@ -69,19 +81,31 @@ func (c *Client) ListInstances(ctx context.Context, projectID, zone string) ([]*
 		Zone:    zone,
 	}
 
-	var instances []*computepb.Instance
-	it := c.client.List(ctx, req)
-	for {
-		instance, err := it.Next()
-		if err == iterator.Done {
-			break
+	var lastErr error
+	var thisErr error
+
+	for i := 0; i < MAXIMUM_RETRIES; i++ {
+		var instances []*computepb.Instance
+		it := c.client.List(ctx, req)
+		for {
+			lastErr = thisErr
+			thisErr = nil
+			instance, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				thisErr = fmt.Errorf("failed to list instances: %v", err)
+				break
+			}
+			instances = append(instances, instance)
 		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to list instances: %v", err)
+		if thisErr == nil {
+			continue
 		}
-		instances = append(instances, instance)
+		return instances, nil
 	}
-	return instances, nil
+	return nil, lastErr
 }
 
 // DeleteInstance deletes an instance in the specified project, zone, and instance name.
@@ -114,10 +138,15 @@ func (c *Client) GetInstance(ctx context.Context, projectID, zone, instanceName 
 		Instance: instanceName,
 	}
 
-	instance, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get instance: %v", err)
-	}
+	var lastErr error
+	for i := 0; i < MAXIMUM_RETRIES; i++ {
 
-	return instance, nil
+		instance, err := c.client.Get(ctx, req)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to get instance: %v", err)
+			continue
+		}
+		return instance, nil
+	}
+	return nil, lastErr
 }
