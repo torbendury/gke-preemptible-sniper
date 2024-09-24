@@ -10,6 +10,7 @@ Its' purpose is to gracefully remove preemptible nodes from Google Kubernetes cl
     - [Helm](#helm)
   - [Metrics](#metrics)
   - [Development Status](#development-status)
+  - [Resource Consumption](#resource-consumption)
   - [Testing](#testing)
   - [Roadmap](#roadmap)
 
@@ -46,6 +47,14 @@ helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-snipe
 ## Development Status
 
 This project is under active development. While I am using it in production, I cannot guarantee that it will work for you. If you encounter any issues, please open an issue on GitHub.
+
+## Resource Consumption
+
+`gke-preemptible-sniper` is designed to be lightweight and not consume too many resources.
+
+| CPU Usage | Memory Usage | Container Image Size      |
+|-----------|--------------|---------------------------|
+| 0.001     | 10Mi         | 15MB (uncompressed: 55MB) |
 
 ## Testing
 
