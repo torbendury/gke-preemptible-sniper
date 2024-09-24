@@ -61,7 +61,7 @@ For already released features, see the [changelog](CHANGELOG.md)! The following 
   - [ ] stabilization
   - [x] sensible defaults
   - [ ] documentation
-  - [ ] logging improvements
+  - [x] logging improvements
   - [ ] error budget improvements
 
 - [ ] gke-preemptible-sniper 1.1.0:
