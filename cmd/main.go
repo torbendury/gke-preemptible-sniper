@@ -38,7 +38,7 @@ const (
 	MIN_CHECK_INTERVAL     = 60  // minimum check interval in seconds that makes sense
 
 	ERROR_BUDGET_EXCEEDED_SLEEP = 10 * time.Second
-	INITIAL_ERROR_BUDGET        = 5
+	INITIAL_ERROR_BUDGET        = 10
 	MAX_ERROR_BUDGET            = 10 // maximum error budget before being reset
 	MIN_ERROR_BUDGET            = 1
 
@@ -199,7 +199,7 @@ func main() {
 		wg.Wait()
 		cancel()
 		increaseErrorBudget()
-
+		checkErrorBudget(errorBudget)
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
 	}

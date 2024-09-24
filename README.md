@@ -62,7 +62,7 @@ For already released features, see the [changelog](CHANGELOG.md)! The following 
   - [x] sensible defaults
   - [x] documentation
   - [x] logging improvements
-  - [ ] error budget improvements
+  - [x] error budget improvements
 
 - [ ] gke-preemptible-sniper 1.1.0:
   - [ ] allow running outside cluster
