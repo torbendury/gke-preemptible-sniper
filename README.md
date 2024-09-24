@@ -66,8 +66,8 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
 
 For already released features, see the [changelog](CHANGELOG.md)! The following features are planned for future releases:
 
-- [ ] gke-preemptible-sniper 1.0.0:
-  - [ ] stabilization
+- [x] gke-preemptible-sniper 1.0.0:
+  - [x] stabilization
   - [x] sensible defaults
   - [x] documentation
   - [x] logging improvements
@@ -79,3 +79,4 @@ For already released features, see the [changelog](CHANGELOG.md)! The following 
 
 - [ ] gke-preemptible-sniper 1.2.0:
   - [ ] allow filtering out nodes by node label
+  - [ ] stabilization: SIGTERM handling
