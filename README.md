@@ -55,34 +55,7 @@ Also, I e2e-tested the application by running it in a Google Kubernetes cluster 
 
 ## Roadmap
 
-- [x] gke-preemptible-sniper 0.0.0:
-  - [x] retrieve running nodes in cluster
-  - [x] drain node
-  - [x] cordon node
-  - [x] retrieve zone and GCP project id
-  - [x] check if node has annotation set
-  - [x] set annotation
-  - [x] get VM instance in GCP
-  - [x] delete VM instance in GCP
-
-- [x] gke-preemptible-sniper 0.1.0:
-  - [x] Containerize
-  - [x] Publish to DockerHub
-  - [x] Helm Chart
-  - [x] GitHub Actions Build
-
-- [x] gke-preemptible-sniper 0.2.0:
-  - [x] allowlist hours
-  - [x] blocklist hours
-  - [x] configurable check interval
-  - [x] configurable node drain timeout
-
-- [x] gke-preemptible-sniper 0.3.0:
-  - [x] provide prometheus metrics
-  - [x] introduce error budget
-
-- [x] gke-preemptible-sniper 0.4.0:
-  - [x] process nodes concurrently
+For already released features, see the [changelog](CHANGELOG.md)! The following features are planned for future releases:
 
 - [ ] gke-preemptible-sniper 1.0.0:
   - [ ] stabilization

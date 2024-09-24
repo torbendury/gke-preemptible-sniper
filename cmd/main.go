@@ -30,28 +30,32 @@ var (
 	nodeDrainTimeout int              // timeout in seconds for draining a node
 	projectID        string           // Google Cloud project ID
 	ready            bool             // readiness status
+	errorBudget      int              // error budget. If exceeded, the sniper will stop and try to recover
+)
 
+const (
+	INITIAL_ERROR_BUDGET = 5
 )
 
 func init() {
+
+	restoreErrorBudget()
+
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	var err error
 	kubernetesClient, err = k8s.NewClient(nil)
-	if err != nil {
-		logger.Error("failed to create Kubernetes client", "error", err)
+	if !ok(err, logger, "failed to create Kubernetes client") {
 		os.Exit(1)
 	}
 
 	googleClient, err = gcloud.NewClient(context.Background())
-	if err != nil {
-		logger.Error("failed to create Google Cloud client", "error", err)
+	if !ok(err, logger, "failed to create Google Cloud client") {
 		os.Exit(2)
 	}
 
 	projectID, err = gcloud.GetProjectID()
-	if err != nil {
-		logger.Error("failed to get project ID", "error", err)
+	if !ok(err, logger, "failed to get project ID") {
 		os.Exit(3)
 	}
 
@@ -61,16 +65,14 @@ func init() {
 		os.Exit(4)
 	}
 	allowedTimes, err = timing.ParseTimeSlots(strings.Split(allowedHours, ","))
-	if err != nil {
-		logger.Error("failed to parse ALLOWED_HOURS", "error", err)
+	if !ok(err, logger, "failed to parse ALLOWED_HOURS") {
 		os.Exit(5)
 	}
 
 	blockedHours := os.Getenv("BLOCKED_HOURS")
 	if blockedHours != "" {
 		blockedTimes, err = timing.ParseTimeSlots(strings.Split(blockedHours, ","))
-		if err != nil {
-			logger.Error("failed to parse BLOCKED_HOURS", "error", err)
+		if !ok(err, logger, "failed to parse BLOCKED_HOURS") {
 			os.Exit(6)
 		}
 	}
@@ -80,8 +82,7 @@ func init() {
 		checkInterval = 300
 	} else {
 		checkInterval, err = strconv.Atoi(checkIntervalStr)
-		if err != nil {
-			logger.Error("failed to parse CHECK_INTERVAL_SECONDS", "error", err)
+		if !ok(err, logger, "failed to parse CHECK_INTERVAL_SECONDS") {
 			os.Exit(7)
 		}
 		if checkInterval == 0 {
@@ -94,8 +95,7 @@ func init() {
 		nodeDrainTimeout = 180
 	} else {
 		nodeDrainTimeout, err = strconv.Atoi(nodeDrainTimeoutStr)
-		if err != nil {
-			logger.Error("failed to parse NODE_DRAIN_TIMEOUT_SECONDS", "error", err)
+		if !ok(err, logger, "failed to parse NODE_DRAIN_TIMEOUT_SECONDS") {
 			os.Exit(8)
 		}
 	}
@@ -134,8 +134,8 @@ func main() {
 
 	go func() {
 		logger.Info("starting HTTP server for health checks")
-		if err := http.ListenAndServe(":8080", nil); err != nil {
-			logger.Error("HTTP server error", "error", err)
+		err := http.ListenAndServe(":8080", nil)
+		if !ok(err, logger, "failed to start HTTP server for health checks") {
 			googleClient.Close()
 			os.Exit(4)
 		}
@@ -151,9 +151,9 @@ func main() {
 
 	logger.Info("starting gke-preemptible-sniper")
 
-	errorBudget := 5
+	restoreErrorBudget()
 
-	// main loop
+	// main loop for checking nodes.
 	for {
 
 		checkErrorBudget(errorBudget)
@@ -162,10 +162,8 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
-		if err != nil {
-			logger.Error("failed to get nodes", "error", err)
+		if !ok(err, logger, "failed to get nodes") {
 			cancel()
-			errorBudget--
 			continue
 		}
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
@@ -177,10 +175,10 @@ func main() {
 			go func(node string) {
 				nodeCtx, nodeCancel := context.WithTimeout(ctx, timeout)
 				err := processNode(nodeCtx, node)
-				if err != nil {
-					logger.Error("failed to process node", "error", err, "node", node)
-					errorBudget--
-					nodeCancel()
+
+				if !ok(err, logger, "failed to process node", "node", node) {
+					nodeCancel() // TODO check later if this is needed
+					wg.Done()
 					return
 				}
 				nodeCancel()
@@ -189,7 +187,7 @@ func main() {
 		}
 		wg.Wait()
 		cancel()
-		errorBudget++
+		increaseErrorBudget()
 
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
@@ -198,14 +196,14 @@ func main() {
 
 func checkErrorBudget(errorBudget int) {
 	if errorBudget > 5 {
-		errorBudget = 5
+		restoreErrorBudget()
 	}
 	if errorBudget <= 0 {
 		logger.Error("error budget exceeded, trying to recover")
 		healthy = false
 		ready = false
 		time.Sleep(10 * time.Second)
-		errorBudget++
+		increaseErrorBudget()
 	} else {
 		healthy = true
 		ready = true
@@ -216,58 +214,52 @@ func processNode(ctx context.Context, node string) error {
 	logger.Info("checking node", "node", node)
 	hasAnnotation, err := kubernetesClient.HasNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
 	if !hasAnnotation {
-		if err != nil {
-			logger.Error("failed to check sniper annotation", "error", err, "node", node)
+		if !ok(err, logger, "failed to check sniper annotation", "error", err, "node", node) {
 			return err
 		}
+
 		preemptibleAnnotation, err := kubernetesClient.HasNodeLabel(ctx, node, "cloud.google.com/gke-preemptible")
-		if err != nil {
-			logger.Error("failed to check preemptible label", "error", err, "node", node)
+		if !ok(err, logger, "failed to check preemptible label", "error", err, "node", node) {
 			return err
 		}
+
 		if !preemptibleAnnotation {
 			logger.Info("skipping non-preemptible", "node", node)
 			return nil
 		}
 
 		randTime, err := timing.CreateAllowedTime(allowedTimes, blockedTimes)
-		if err != nil {
-			logger.Error("failed to create allowed time", "error", err)
+		if !ok(err, logger, "failed to create allowed time") {
 			return err
 		}
 
 		logger.Info("adding annotation to node", "node", node, "timestamp", randTime.Format(time.RFC3339))
 		err = kubernetesClient.SetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp", randTime.Format(time.RFC3339))
-		if err != nil {
-			logger.Error("failed to add annotation", "error", err, "node", node)
+		if !ok(err, logger, "failed to add annotation", "error", err, "node", node) {
 			return err
 		}
 	} else {
 		logger.Info("node already has annotation", "node", node)
 		// check if the node should be deleted
 		timestamp, err := kubernetesClient.GetNodeAnnotation(ctx, node, "gke-preemptible-sniper/timestamp")
-		if err != nil {
-			logger.Error("failed to check annotation", "error", err, "node", node)
+		if !ok(err, logger, "failed to get annotation", "error", err, "node", node) {
 			return err
 		}
 		layout := time.RFC3339
 		t, err := time.Parse(layout, timestamp)
-		if err != nil {
-			logger.Error("failed to parse time", "error", err, "node", node, "timestamp", timestamp)
+		if !ok(err, logger, "failed to parse time", "error", err, "node", node, "timestamp", timestamp) {
 			return err
 		}
 		if time.Now().After(t) {
 			logger.Info("cordoning", "node", node)
 			err = kubernetesClient.CordonNode(ctx, node)
-			if err != nil {
-				logger.Error("failed to cordon node", "error", err, "node", node)
+			if !ok(err, logger, "failed to cordon node", "error", err, "node", node) {
 				return err
 			}
 			drainCtx, drainCancel := context.WithTimeout(context.Background(), time.Duration(nodeDrainTimeout)*time.Second)
 			logger.Info("draining", "node", node)
 			err = kubernetesClient.DrainNode(drainCtx, node)
-			if err != nil {
-				logger.Error("failed to drain node", "error", err, "node", node)
+			if !ok(err, logger, "failed to drain node", "error", err, "node", node) {
 				drainCancel()
 				return err
 			}
@@ -275,8 +267,8 @@ func processNode(ctx context.Context, node string) error {
 			time.Sleep(10 * time.Second)
 
 			instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
-			if err != nil {
-				logger.Error("failed to get instance name", "error", err, "node", node)
+			if !ok(err, logger, "failed to get instance name", "error", err, "node", node) {
+				return err
 			}
 			if instance == "" {
 				logger.Error("instance name is empty", "node", node)
@@ -284,8 +276,8 @@ func processNode(ctx context.Context, node string) error {
 			}
 
 			zone, err := kubernetesClient.GetNodeZone(ctx, node)
-			if err != nil {
-				logger.Error("failed to get zone", "error", err, "node", node)
+			if !ok(err, logger, "failed to get zone", "error", err, "node", node) {
+				return err
 			}
 			if zone == "" {
 				logger.Error("zone is empty", "node", node)
@@ -294,14 +286,12 @@ func processNode(ctx context.Context, node string) error {
 
 			logger.Info("deleting instance", "instance", instance, "zone", zone, "node", node)
 			err = kubernetesClient.DeleteNode(ctx, node)
-			if err != nil {
-				logger.Error("failed to delete node", "error", err, "node", node)
+			if !ok(err, logger, "failed to delete node", "error", err, "node", node) {
 				return err
 			}
 
 			err = googleClient.DeleteInstance(ctx, projectID, zone, instance)
-			if err != nil {
-				logger.Error("failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node)
+			if !ok(err, logger, "failed to delete instance", "error", err, "instance", instance, "zone", zone, "project", projectID, "node", node) {
 				return err
 			}
 			logger.Info("deleted instance", "instance", instance, "zone", zone, "project", projectID, "node", node)
@@ -316,4 +306,27 @@ func processNode(ctx context.Context, node string) error {
 		}
 	}
 	return nil
+}
+
+func ok(err error, logger *slog.Logger, message string, loginfo ...any) bool {
+	// add err to loginfo
+	loginfo = append(loginfo, "error", err)
+	if err != nil {
+		logger.Error(message, loginfo...)
+		decreaseErrorBudget()
+		return false
+	}
+	return true
+}
+
+func decreaseErrorBudget() {
+	errorBudget--
+}
+
+func increaseErrorBudget() {
+	errorBudget++
+}
+
+func restoreErrorBudget() {
+	errorBudget = INITIAL_ERROR_BUDGET
 }
