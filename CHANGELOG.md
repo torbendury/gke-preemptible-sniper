@@ -1,7 +1,74 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="gke-preemptible-sniper-1.0.0"></a>
+## [gke-preemptible-sniper-1.0.0] - 2024-09-24
+### Chore
+- bump version
+
 ### Doc
+- resource consumption
+- development status
+
+
+<a name="gke-preemptible-sniper-0.4.7"></a>
+## [gke-preemptible-sniper-0.4.7] - 2024-09-24
+### Feat
+- **monitoring:** add PodMonitoring and ServiceMonitor for auto instrumented metric scraping
+
+
+<a name="gke-preemptible-sniper-0.4.6"></a>
+## [gke-preemptible-sniper-0.4.6] - 2024-09-24
+### Chore
+- **error budget:** re-check at end of loop and increase initial error budget
+
+### Fix
+- **gcloud:** implement up to 3 retries for read-only methods
+
+
+<a name="gke-preemptible-sniper-0.4.5"></a>
+## [gke-preemptible-sniper-0.4.5] - 2024-09-24
+### Chore
+- typo
+
+### Doc
+- document go packages and their functions
+- roadmap status
+- main loop documentation
+- **helm-chart:** description update
+
+
+<a name="gke-preemptible-sniper-0.4.4"></a>
+## [gke-preemptible-sniper-0.4.4] - 2024-09-24
+### Refactor
+- get rid of magic numbers inside code
+
+
+<a name="gke-preemptible-sniper-0.4.3"></a>
+## [gke-preemptible-sniper-0.4.3] - 2024-09-24
+### Chore
+- encapsulate error budget handling and error handling/logging
+
+
+<a name="gke-preemptible-sniper-0.4.2"></a>
+## [gke-preemptible-sniper-0.4.2] - 2024-09-24
+### Fix
+- **main loop:** wait for concurrent node processing to finish before context cancellation
+
+
+<a name="gke-preemptible-sniper-0.4.1"></a>
+## [gke-preemptible-sniper-0.4.1] - 2024-09-24
+### Fix
+- **main loop:** give each goroutine its own context
+
+
+<a name="gke-preemptible-sniper-0.4.0"></a>
+## [gke-preemptible-sniper-0.4.0] - 2024-09-23
+### Doc
+- contributing
+- CODE_OF_CONDUCT
+- CHANGELOG
 - roadmap scope
 
 ### Feat
@@ -261,7 +328,16 @@
 - different clients for kubernetes and GCP, move init into their own function
 
 
-[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.5...HEAD
+[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.0.0...HEAD
+[gke-preemptible-sniper-1.0.0]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.7...gke-preemptible-sniper-1.0.0
+[gke-preemptible-sniper-0.4.7]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.6...gke-preemptible-sniper-0.4.7
+[gke-preemptible-sniper-0.4.6]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.5...gke-preemptible-sniper-0.4.6
+[gke-preemptible-sniper-0.4.5]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.4...gke-preemptible-sniper-0.4.5
+[gke-preemptible-sniper-0.4.4]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.3...gke-preemptible-sniper-0.4.4
+[gke-preemptible-sniper-0.4.3]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.2...gke-preemptible-sniper-0.4.3
+[gke-preemptible-sniper-0.4.2]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.1...gke-preemptible-sniper-0.4.2
+[gke-preemptible-sniper-0.4.1]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.4.0...gke-preemptible-sniper-0.4.1
+[gke-preemptible-sniper-0.4.0]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.5...gke-preemptible-sniper-0.4.0
 [gke-preemptible-sniper-0.3.5]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.4...gke-preemptible-sniper-0.3.5
 [gke-preemptible-sniper-0.3.4]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.3...gke-preemptible-sniper-0.3.4
 [gke-preemptible-sniper-0.3.3]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-0.3.2...gke-preemptible-sniper-0.3.3

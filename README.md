@@ -12,6 +12,8 @@ Its' purpose is to gracefully remove preemptible nodes from Google Kubernetes cl
   - [Development Status](#development-status)
   - [Resource Consumption](#resource-consumption)
   - [Testing](#testing)
+  - [Example](#example)
+    - [Infrastructure](#infrastructure)
   - [Roadmap](#roadmap)
 
 ## Problem solved
@@ -29,10 +31,18 @@ helm repo add gke-preemptible-sniper https://torbendury.github.io/gke-preemptibl
 helm repo update
 ```
 
+Create a `values.yaml` file with the following content:
+
+```yaml
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: <SERVICE_ACCOUNT_NAME>@<PROJECT_ID>.iam.gserviceaccount.com
+```
+
 Install the chart:
 
 ```bash
-helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace
+helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-sniper --namespace gke-preemptible-sniper --create-namespace --values=values.yaml
 ```
 
 ## Metrics
@@ -43,6 +53,17 @@ helm install gke-preemptible-sniper gke-preemptible-sniper/gke-preemptible-snipe
 |----------------------------------------------------|--------------------------------------------------------|
 | `gke_preemptible_sniper_sniped_last_hour`          | Number of nodes sniped in the last hour                |
 | `gke_preemptible_sniper_snipes_expected_next_hour` | Number of nodes expected to be sniped in the next hour |
+
+Also, if you use Google Managed Prometheus or Prometheus Operator, you can configure the Helm Chart to automatically provide monitoring instrumentation for you. You can do this by adding the following to your `values.yaml`:
+
+```yaml
+metricScraping:
+  googleManagedPrometheus: true
+  # OR
+  prometheusOperator: true
+```
+
+This will create a `ServiceMonitor` for Prometheus Operator or a `PodMonitoring` for Google Managed Prometheus.
 
 ## Development Status
 
@@ -62,16 +83,23 @@ There are unit tests for the most important parts of the application.
 
 Also, I e2e-tested the application by running it in a Google Kubernetes cluster and let it delete several preemptible nodes. Due to cost reasons this is not going to be part of the CI pipeline.
 
+You can run the tests by executing the following command:
+
+```bash
+make test
+```
+
+This runs the unit tests, verifies go modules, `go vet` and also lints the Helm Chart.
+
+## Example
+
+### Infrastructure
+
+You can find a working example of the infrastructure in the [terraform](terraform/) directory. It creates a Google Kubernetes cluster with everything needed around it. You can use it to test the application in a real environment, it might also serve as a starting point for your own infrastructure. I tested `gke-preemptible-sniper` with this infrastructure.
+
 ## Roadmap
 
 For already released features, see the [changelog](CHANGELOG.md)! The following features are planned for future releases:
-
-- [x] gke-preemptible-sniper 1.0.0:
-  - [x] stabilization
-  - [x] sensible defaults
-  - [x] documentation
-  - [x] logging improvements
-  - [x] error budget improvements
 
 - [ ] gke-preemptible-sniper 1.1.0:
   - [ ] allow running outside cluster
