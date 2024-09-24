@@ -34,28 +34,29 @@ var (
 )
 
 const (
-	DEFAULT_CHECK_INTERVAL = 300
-	MIN_CHECK_INTERVAL     = 60
+	DEFAULT_CHECK_INTERVAL = 300 // used if env CHECK_INTERVAL_SECONDS is not set or malformed
+	MIN_CHECK_INTERVAL     = 60  // minimum check interval in seconds that makes sense
 
 	ERROR_BUDGET_EXCEEDED_SLEEP = 10 * time.Second
 	INITIAL_ERROR_BUDGET        = 5
-	MAX_ERROR_BUDGET            = 10
+	MAX_ERROR_BUDGET            = 10 // maximum error budget before being reset
 	MIN_ERROR_BUDGET            = 1
 
-	DEFAULT_NODE_DRAIN_TIMEOUT = 180
-	MIN_NODE_DRAIN_TIMEOUT     = 30
-	NODE_DRAIN_SLEEP           = 10 * time.Second
+	DEFAULT_NODE_DRAIN_TIMEOUT = 180              // used if env NODE_DRAIN_TIMEOUT_SECONDS is not set or malformed
+	MIN_NODE_DRAIN_TIMEOUT     = 30               // minimum node drain timeout in seconds that makes sense
+	NODE_DRAIN_SLEEP           = 10 * time.Second // sleep time after draining a node
 
 	STATS_UPDATE_INTERVAL = 2 * time.Minute
 )
 
 func init() {
 
+	healthy = true
+	ready = true
 	restoreErrorBudget()
-
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
 	var err error
+
 	kubernetesClient, err = k8s.NewClient(nil)
 	if !ok(err, logger, "failed to create Kubernetes client") {
 		os.Exit(1)
@@ -115,13 +116,11 @@ func init() {
 		nodeDrainTimeout = DEFAULT_NODE_DRAIN_TIMEOUT
 	}
 
-	healthy = true
-	ready = true
-
 	logger.Info("initialized", "project", projectID, "allowed", allowedTimes, "blocked", blockedTimes, "checkInterval", checkInterval, "nodeDrainTimeout", nodeDrainTimeout)
 }
 
 func main() {
+	// Start web server for health checks and statistics
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if healthy {
 			w.WriteHeader(http.StatusOK)
@@ -153,6 +152,7 @@ func main() {
 		}
 	}()
 
+	// background goroutine for updating prometheus metrics
 	go func() {
 		for {
 			stats.UpdateSnipedInLastHour()
@@ -167,7 +167,6 @@ func main() {
 
 	// main loop for checking nodes.
 	for {
-
 		checkErrorBudget(errorBudget)
 
 		timeout := time.Duration(checkInterval) * time.Second
