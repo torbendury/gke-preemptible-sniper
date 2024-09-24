@@ -1,0 +1,29 @@
+{{- if .Values.metricScraping.googleManagedPrometheus }}
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: gke-preemptible-sniper
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "gke-preemptible-sniper.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: http
+    interval: 10s
+{{- end }}
+
+{{- if .Values.metricScraping.prometheusOperator }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gke-preemptible-sniper
+  labels:
+    {{- include "gke-preemptible-sniper.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "gke-preemptible-sniper.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: http
+{{- end }}

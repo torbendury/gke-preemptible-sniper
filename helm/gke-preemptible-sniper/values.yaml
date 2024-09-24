@@ -71,3 +71,9 @@ time:
   blockList: ""
   checkIntervalSeconds: 300
   nodeDrainTimeoutSeconds: 180
+
+# Whether to enable auto instrumented metric scraping for Google Managed Prometheus (GMP)
+# or alternatively self managed Prometheus with Prometheus Operator
+metricScraping:
+  googleManagedPrometheus: false
+  prometheusOperator: false
