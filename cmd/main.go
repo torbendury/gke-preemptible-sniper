@@ -34,7 +34,19 @@ var (
 )
 
 const (
-	INITIAL_ERROR_BUDGET = 5
+	DEFAULT_CHECK_INTERVAL = 300
+	MIN_CHECK_INTERVAL     = 60
+
+	ERROR_BUDGET_EXCEEDED_SLEEP = 10 * time.Second
+	INITIAL_ERROR_BUDGET        = 5
+	MAX_ERROR_BUDGET            = 10
+	MIN_ERROR_BUDGET            = 1
+
+	DEFAULT_NODE_DRAIN_TIMEOUT = 180
+	MIN_NODE_DRAIN_TIMEOUT     = 30
+	NODE_DRAIN_SLEEP           = 10 * time.Second
+
+	STATS_UPDATE_INTERVAL = 2 * time.Minute
 )
 
 func init() {
@@ -79,28 +91,28 @@ func init() {
 
 	checkIntervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
 	if checkIntervalStr == "" {
-		checkInterval = 300
+		checkInterval = DEFAULT_CHECK_INTERVAL
 	} else {
 		checkInterval, err = strconv.Atoi(checkIntervalStr)
 		if !ok(err, logger, "failed to parse CHECK_INTERVAL_SECONDS") {
 			os.Exit(7)
 		}
-		if checkInterval == 0 {
-			checkInterval = 300
+		if checkInterval <= MIN_CHECK_INTERVAL {
+			checkInterval = DEFAULT_CHECK_INTERVAL
 		}
 	}
 
 	nodeDrainTimeoutStr := os.Getenv("NODE_DRAIN_TIMEOUT_SECONDS")
 	if nodeDrainTimeoutStr == "" {
-		nodeDrainTimeout = 180
+		nodeDrainTimeout = DEFAULT_NODE_DRAIN_TIMEOUT
 	} else {
 		nodeDrainTimeout, err = strconv.Atoi(nodeDrainTimeoutStr)
 		if !ok(err, logger, "failed to parse NODE_DRAIN_TIMEOUT_SECONDS") {
 			os.Exit(8)
 		}
 	}
-	if nodeDrainTimeout <= 0 {
-		nodeDrainTimeout = 180
+	if nodeDrainTimeout <= MIN_NODE_DRAIN_TIMEOUT {
+		nodeDrainTimeout = DEFAULT_NODE_DRAIN_TIMEOUT
 	}
 
 	healthy = true
@@ -145,7 +157,7 @@ func main() {
 		for {
 			stats.UpdateSnipedInLastHour()
 			stats.UpdateSnipesExpectedInNextHour()
-			time.Sleep(2 * time.Minute)
+			time.Sleep(STATS_UPDATE_INTERVAL)
 		}
 	}()
 
@@ -191,22 +203,6 @@ func main() {
 
 		logger.Info("sleeping", "seconds", checkInterval)
 		time.Sleep(time.Duration(checkInterval) * time.Second)
-	}
-}
-
-func checkErrorBudget(errorBudget int) {
-	if errorBudget > 5 {
-		restoreErrorBudget()
-	}
-	if errorBudget <= 0 {
-		logger.Error("error budget exceeded, trying to recover")
-		healthy = false
-		ready = false
-		time.Sleep(10 * time.Second)
-		increaseErrorBudget()
-	} else {
-		healthy = true
-		ready = true
 	}
 }
 
@@ -264,7 +260,7 @@ func processNode(ctx context.Context, node string) error {
 				return err
 			}
 			drainCancel()
-			time.Sleep(10 * time.Second)
+			time.Sleep(NODE_DRAIN_SLEEP)
 
 			instance, err := kubernetesClient.GetNodeLabel(ctx, node, "kubernetes.io/hostname")
 			if !ok(err, logger, "failed to get instance name", "error", err, "node", node) {
@@ -317,6 +313,22 @@ func ok(err error, logger *slog.Logger, message string, loginfo ...any) bool {
 		return false
 	}
 	return true
+}
+
+func checkErrorBudget(errorBudget int) {
+	if errorBudget > MAX_ERROR_BUDGET {
+		restoreErrorBudget()
+	}
+	if errorBudget <= MIN_ERROR_BUDGET {
+		logger.Warn("error budget exceeded, trying to recover")
+		healthy = false
+		ready = false
+		time.Sleep(ERROR_BUDGET_EXCEEDED_SLEEP)
+		increaseErrorBudget()
+	} else {
+		healthy = true
+		ready = true
+	}
 }
 
 func decreaseErrorBudget() {
