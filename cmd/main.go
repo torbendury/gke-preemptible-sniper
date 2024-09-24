@@ -170,12 +170,15 @@ func main() {
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
 		for _, node := range nodes {
 			go func(node string) {
-				err := processNode(ctx, node)
+				nodeCtx, nodeCancel := context.WithTimeout(ctx, timeout)
+				err := processNode(nodeCtx, node)
 				if err != nil {
 					logger.Error("failed to process node", "error", err, "node", node)
 					errorBudget--
+					nodeCancel()
 					return
 				}
+				nodeCancel()
 			}(node)
 		}
 		cancel()
