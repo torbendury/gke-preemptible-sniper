@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/compute v1.28.1
 	github.com/golang/mock v1.1.1
 	github.com/googleapis/gax-go/v2 v2.13.0
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/client_golang v1.20.5
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	google.golang.org/api v0.198.0
 	k8s.io/api v0.31.1
