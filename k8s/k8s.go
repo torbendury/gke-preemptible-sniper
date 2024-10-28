@@ -123,7 +123,11 @@ func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 
 		err = c.evictPod(ctx, &pod)
 		if err != nil {
-			return err
+			// try to recover by deleting the pod
+			err = c.DeletePod(ctx, pod.Name, pod.Namespace)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -260,4 +264,9 @@ func (c *Client) GetNodeZone(ctx context.Context, nodeName string) (string, erro
 // DeleteNode deletes the node with the provided name.
 func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
 	return c.client.CoreV1().Nodes().Delete(ctx, nodeName, metav1.DeleteOptions{})
+}
+
+// DeletePod deletes the pod with the provided name and namespace.
+func (c *Client) DeletePod(ctx context.Context, podName, namespace string) error {
+	return c.client.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
