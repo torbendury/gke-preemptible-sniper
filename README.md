@@ -20,6 +20,12 @@ Its' purpose is to gracefully remove preemptible nodes from Google Kubernetes cl
 
 `gke-preemptible-sniper` helps in breaking down potentially big disruptions into smaller, more manageable ones. Instead of having a big chunk of your cluster removed at once, you can remove preemptible nodes one by one, giving your cluster time to recover and redistribute the load. This way, you can avoid the situation where your cluster is left with not enough resources to handle the load, since Google Clouds' preemption mechanism is not aware of the state of your cluster and does not necessarily respect disruption budgets of yours.
 
+Note: `gke-preemptible-killer` is going to try to evict Pods safely. Sometimes, this is not possible, and the Pod will be deleted. This might be due to one or more of the following reasons:
+
+- The Pod has a `PodDisruptionBudget` that does not allow the eviction
+- The Pod has an emptyDir volume
+- The Pod is part of a DaemonSet
+
 ## Installation
 
 ### Helm
