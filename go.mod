@@ -8,15 +8,15 @@ require (
 	github.com/googleapis/gax-go/v2 v2.13.0
 	github.com/prometheus/client_golang v1.20.5
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
-	google.golang.org/api v0.203.0
+	google.golang.org/api v0.204.0
 	k8s.io/api v0.31.2
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
 )
 
 require (
-	cloud.google.com/go/auth v0.9.9 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
+	cloud.google.com/go/auth v0.10.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
