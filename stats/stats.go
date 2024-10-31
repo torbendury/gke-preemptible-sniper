@@ -47,8 +47,11 @@ func AddSnipedNode(nodeName string, time time.Time) {
 // UpdateSnipedInLastHour updates the number of sniped nodes in the last hour. It removes nodes that are older than an hour.
 func UpdateSnipedInLastHour() {
 	var snipedNodes SnipedNodes
+	now := time.Now()
+	oneHourAgo := now.Add(-time.Hour)
+
 	for _, snipedNode := range snipedInLastHour {
-		if snipedNode.Time.After(time.Now().Add(-time.Hour)) {
+		if snipedNode.Time.After(oneHourAgo) && snipedNode.Time.Before(now) {
 			snipedNodes = append(snipedNodes, snipedNode)
 		}
 	}
@@ -68,8 +71,11 @@ func AddExpectedSnipe(nodeName string, time time.Time) {
 // UpdateSnipesExpectedInNextHour updates the number of expected snipes in the next hour. It removes nodes which timestamp has already passed or is further than an hour away.
 func UpdateSnipesExpectedInNextHour() {
 	var snipedNodes SnipedNodes
+	now := time.Now()
+	oneHourLater := now.Add(time.Hour)
+
 	for _, snipedNode := range snipesExpectedInNextHour {
-		if snipedNode.Time.After(time.Now()) && snipedNode.Time.Before(time.Now().Add(time.Hour)) {
+		if snipedNode.Time.After(now) && snipedNode.Time.Before(oneHourLater) {
 			snipedNodes = append(snipedNodes, snipedNode)
 		}
 	}
