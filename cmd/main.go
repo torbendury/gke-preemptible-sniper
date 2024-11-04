@@ -295,7 +295,7 @@ func processNode(ctx context.Context, node string) error {
 			duration := time.Until(t)
 			logger.Info("node has time to live left", "node", node, "left", fmt.Sprintf("%vh%vm", int(duration.Hours()), int(duration.Minutes())%60))
 
-			if duration < time.Hour {
+			if time.Now().Add(time.Hour).After(t) {
 				stats.AddExpectedSnipe(node, t)
 			}
 		}

@@ -50,6 +50,8 @@ func UpdateSnipedInLastHour() {
 	now := time.Now()
 	oneHourAgo := now.Add(-time.Hour)
 
+	SnipedInLastHour.Reset()
+
 	for _, snipedNode := range snipedInLastHour {
 		if snipedNode.Time.After(oneHourAgo) && snipedNode.Time.Before(now) {
 			snipedNodes = append(snipedNodes, snipedNode)
@@ -73,6 +75,8 @@ func UpdateSnipesExpectedInNextHour() {
 	var snipedNodes SnipedNodes
 	now := time.Now()
 	oneHourLater := now.Add(time.Hour)
+
+	SnipesExpectedInNextHour.Reset()
 
 	for _, snipedNode := range snipesExpectedInNextHour {
 		if snipedNode.Time.After(now) && snipedNode.Time.Before(oneHourLater) {
