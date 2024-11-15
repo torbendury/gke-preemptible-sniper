@@ -3,7 +3,7 @@ module github.com/torbendury/gke-preemptible-sniper
 go 1.23.2
 
 require (
-	cloud.google.com/go/compute v1.28.2
+	cloud.google.com/go/compute v1.29.0
 	github.com/golang/mock v1.1.1
 	github.com/googleapis/gax-go/v2 v2.13.0
 	github.com/prometheus/client_golang v1.20.5
