@@ -10,7 +10,7 @@ require (
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 	google.golang.org/api v0.203.0
 	k8s.io/api v0.31.2
-	k8s.io/apimachinery v0.31.2
+	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.2
 )
 
