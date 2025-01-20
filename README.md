@@ -1,3 +1,9 @@
+<div align="center">
+  <br>
+  <img src="assets/sniper.png" alt="sniper" width="200"/>
+  <br>
+</div>
+
 # gke-preemptible-sniper
 
 `gke-preemptible-sniper` is a small application written in Golang that is supposed to run inside a Google Kubernetes cluster and work around the [known limitation of preemptible VMs](https://cloud.google.com/compute/docs/instances/preemptible#limitations).
@@ -15,6 +21,7 @@ Its' purpose is to gracefully remove preemptible nodes from Google Kubernetes cl
   - [Example](#example)
     - [Infrastructure](#infrastructure)
   - [Roadmap](#roadmap)
+  - [Attributions](#attributions)
 
 ## Problem solved
 
@@ -114,3 +121,7 @@ For already released features, see the [changelog](CHANGELOG.md)! The following 
 - [ ] gke-preemptible-sniper 1.2.0:
   - [ ] allow filtering out nodes by node label
   - [ ] stabilization: SIGTERM handling
+
+## Attributions
+
+- [Soldier icons created by max.icons - Flaticon](https://www.flaticon.com/free-icons/soldier)
