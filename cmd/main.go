@@ -43,7 +43,7 @@ const (
 	MIN_ERROR_BUDGET            = 1
 
 	DEFAULT_NODE_DRAIN_TIMEOUT = 180              // used if env NODE_DRAIN_TIMEOUT_SECONDS is not set or malformed
-	MIN_NODE_DRAIN_TIMEOUT     = 30               // minimum node drain timeout in seconds that makes sense
+	MIN_NODE_DRAIN_TIMEOUT     = 45               // minimum node drain timeout in seconds that makes sense
 	NODE_DRAIN_SLEEP           = 10 * time.Second // sleep time after draining a node
 
 	STATS_UPDATE_INTERVAL = 2 * time.Minute

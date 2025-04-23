@@ -6,7 +6,7 @@ package timing
 import (
 	"time"
 
-	"golang.org/x/exp/rand"
+	"math/rand"
 )
 
 // TimeSlot represents a timeslot in the format "HH:MM-HH:MM"

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sync"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/policy/v1beta1"
@@ -23,6 +25,18 @@ import (
 type Client struct {
 	client kubernetes.Interface
 }
+
+type PodEvictionError struct {
+	PodName      string
+	PodNamespace string
+	Err          error
+}
+
+func (r *PodEvictionError) Error() string {
+	return fmt.Sprintf("pod %v, namespace %v, err %v", r.PodName, r.PodNamespace, r.Err)
+}
+
+const POD_EVICT_TIMEOUT_SECONDS = 30
 
 // NewClient creates a new Kubernetes client using the provided rest.Config and returns a Client.
 // If no config is provided, it will try to use in-cluster config, and if that fails, it will fallback to a kubeconfig file.
@@ -116,19 +130,58 @@ func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(pods.Items))
+
 	for _, pod := range pods.Items {
 		if pod.Namespace == "kube-system" {
 			continue // Skip system pods
 		}
 
-		err = c.evictPod(ctx, &pod)
-		if err != nil {
-			// try to recover by deleting the pod
-			err = c.DeletePod(ctx, pod.Name, pod.Namespace)
+		wg.Add(1)
+
+		go func(pod v1.Pod) {
+
+			defer wg.Done()
+
+			err = c.evictPod(ctx, &pod)
 			if err != nil {
-				return err
+				// try to recover by deleting the pod
+				err = c.DeletePod(ctx, pod.Name, pod.Namespace)
+				if err != nil {
+					errChan <- err
+				}
 			}
-		}
+
+			for range POD_EVICT_TIMEOUT_SECONDS {
+				_, err = c.client.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+				if err != nil {
+					break
+				}
+				<-time.After(1 * time.Second)
+			}
+			_, err = c.client.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err == nil {
+				errChan <- &PodEvictionError{
+					PodName:      pod.Name,
+					PodNamespace: pod.Namespace,
+					Err:          fmt.Errorf("pod %s/%s still exists after eviction", pod.Namespace, pod.Name),
+				}
+			}
+
+		}(pod)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Get all errors and compile them to one
+	var errList []error
+	for err := range errChan {
+		errList = append(errList, err)
+	}
+	if len(errList) > 0 {
+		return fmt.Errorf("failed to drain node %s: %v", nodeName, errList)
 	}
 
 	return nil
@@ -269,4 +322,13 @@ func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
 // DeletePod deletes the pod with the provided name and namespace.
 func (c *Client) DeletePod(ctx context.Context, podName, namespace string) error {
 	return c.client.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+}
+
+// GetPod checks if a Pod exists in the given namespace and returns it.
+func (c *Client) GetPod(ctx context.Context, podName, namespace string) (*v1.Pod, error) {
+	pod, err := c.client.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return pod, nil
 }
