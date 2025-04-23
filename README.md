@@ -114,11 +114,11 @@ You can find a working example of the infrastructure in the [terraform](terrafor
 
 For already released features, see the [changelog](CHANGELOG.md)! The following features are planned for future releases:
 
-- [ ] gke-preemptible-sniper 1.1.0:
+- [ ] gke-preemptible-sniper 1.3.0:
   - [ ] allow running outside cluster
   - [ ] read prepared kubeconfig
 
-- [ ] gke-preemptible-sniper 1.2.0:
+- [ ] gke-preemptible-sniper 1.4.0:
   - [ ] allow filtering out nodes by node label
   - [ ] stabilization: SIGTERM handling
 
