@@ -31,7 +31,7 @@ Note: `gke-preemptible-sniper` is going to try to evict Pods safely. Sometimes, 
 
 - The Pod has a `PodDisruptionBudget` that does not allow the eviction
 - The Pod has an emptyDir volume
-- The Pod is part of a DaemonSet
+~~- The Pod is part of a DaemonSet~~ (this fact is superseded, DaemonSet Pods are now actively ignored during eviction together with `kube-system` Pods to ensure clean shutdown behavior of dependent applications)
 
 ## Installation
 
