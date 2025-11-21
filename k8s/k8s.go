@@ -120,7 +120,7 @@ func (c *Client) CordonNode(ctx context.Context, nodeName string) error {
 }
 
 // DrainNode drains the node with the provided name.
-// It evicts all the pods running on the node, except for the ones in the kube-system namespace.
+// It evicts all the pods running on the node, except for the ones in the kube-system namespace and DaemonSet pods.
 // It uses the Eviction API to evict the pods.
 func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 	pods, err := c.client.CoreV1().Pods("").List(ctx, metav1.ListOptions{
@@ -136,6 +136,11 @@ func (c *Client) DrainNode(ctx context.Context, nodeName string) error {
 	for _, pod := range pods.Items {
 		if pod.Namespace == "kube-system" {
 			continue // Skip system pods
+		}
+
+		// Skip DaemonSet pods
+		if c.isDaemonSetPod(&pod) {
+			continue
 		}
 
 		wg.Add(1)
@@ -331,4 +336,14 @@ func (c *Client) GetPod(ctx context.Context, podName, namespace string) (*v1.Pod
 		return nil, err
 	}
 	return pod, nil
+}
+
+// isDaemonSetPod checks if a pod is managed by a DaemonSet
+func (c *Client) isDaemonSetPod(pod *v1.Pod) bool {
+	for _, ownerRef := range pod.OwnerReferences {
+		if ownerRef.Kind == "DaemonSet" {
+			return true
+		}
+	}
+	return false
 }
