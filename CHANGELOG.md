@@ -1,11 +1,25 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="gke-preemptible-sniper-1.2.0"></a>
+## [gke-preemptible-sniper-1.2.0] - 2025-04-23
 ### Chore
+- bump version
+- increase min node drain timeout
+- bump dep versions
 - typo
 
 ### Doc
+- README
+- CHANGELOG
 - title picture
+
+### Feat
+- move away from deprecated rand module
+
+### Fix
+- wait for Pod evictions/deletions to correctly execute before sniping nodes
 
 
 <a name="gke-preemptible-sniper-1.1.3"></a>
@@ -375,7 +389,8 @@
 - different clients for kubernetes and GCP, move init into their own function
 
 
-[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.1.3...HEAD
+[Unreleased]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.2.0...HEAD
+[gke-preemptible-sniper-1.2.0]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.1.3...gke-preemptible-sniper-1.2.0
 [gke-preemptible-sniper-1.1.3]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.1.2...gke-preemptible-sniper-1.1.3
 [gke-preemptible-sniper-1.1.2]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.1.1...gke-preemptible-sniper-1.1.2
 [gke-preemptible-sniper-1.1.1]: https://github.com/torbendury/kube-networkpolicy-denier/compare/gke-preemptible-sniper-1.1.0...gke-preemptible-sniper-1.1.1
