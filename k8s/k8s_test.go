@@ -15,7 +15,7 @@ import (
 // GetMockClient returns a fake k8s client for testing purposes
 func GetMockClient() *Client {
 	return &Client{
-		client: testclient.NewSimpleClientset(),
+		client: testclient.NewClientset(),
 	}
 }
 
