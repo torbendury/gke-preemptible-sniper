@@ -54,7 +54,7 @@ jobs:
         shell: bash
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Bump appVersion to ${{ steps.pre-step.outputs.release_tag }}
           commit_user_name: GitHub Actions
