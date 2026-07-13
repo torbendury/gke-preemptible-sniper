@@ -120,7 +120,7 @@ For already released features, see the [changelog](CHANGELOG.md)! The following 
 
 - [ ] gke-preemptible-sniper 1.4.0:
   - [ ] allow filtering out nodes by node label
-  - [ ] stabilization: SIGTERM handling
+  - [x] stabilization: SIGTERM handling
 
 ## Attributions
 

@@ -7,9 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -120,6 +122,13 @@ func init() {
 }
 
 func main() {
+	// root context for graceful shutdown via signals
+	rootCtx, rootCancel := context.WithCancel(context.Background())
+	defer rootCancel()
+
+	// listen for termination signals
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	// Start web server for health checks and statistics
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if healthy {
@@ -143,38 +152,71 @@ func main() {
 
 	http.Handle("/metrics", promhttp.HandlerFor(stats.Reg, promhttp.HandlerOpts{}))
 
+	// use an http.Server so we can gracefully shutdown
+	srv := &http.Server{Addr: ":8080", Handler: nil}
+	serverErrCh := make(chan error, 1)
 	go func() {
 		logger.Info("starting HTTP server for health checks")
-		err := http.ListenAndServe(":8080", nil)
-		if !ok(err, logger, "failed to start HTTP server for health checks") {
-			googleClient.Close()
-			os.Exit(4)
+		serverErrCh <- srv.ListenAndServe()
+	}()
+
+	// signal handler: cancel root context and initiate server shutdown
+	go func() {
+		sig := <-sigCh
+		logger.Info("received signal, initiating shutdown", "signal", sig)
+		healthy = false
+		ready = false
+		rootCancel()
+		// attempt server shutdown with timeout
+		ctxShut, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctxShut); err != nil {
+			logger.Warn("error during server shutdown", "error", err)
 		}
 	}()
 
-	// background goroutine for updating prometheus metrics
-	go func() {
+	// background goroutine for updating prometheus metrics (cancellable)
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(STATS_UPDATE_INTERVAL)
+		defer ticker.Stop()
+		// run once immediately, then on ticker
+		stats.UpdateSnipedInLastHour()
+		stats.UpdateSnipesExpectedInNextHour()
 		for {
-			stats.UpdateSnipedInLastHour()
-			stats.UpdateSnipesExpectedInNextHour()
-			time.Sleep(STATS_UPDATE_INTERVAL)
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				stats.UpdateSnipedInLastHour()
+				stats.UpdateSnipesExpectedInNextHour()
+			}
 		}
-	}()
+	}(rootCtx)
 
 	logger.Info("starting gke-preemptible-sniper")
 
 	restoreErrorBudget()
 
-	// main loop for checking nodes.
+	// main loop for checking nodes. It exits when rootCtx is cancelled.
+mainLoop:
 	for {
+		select {
+		case <-rootCtx.Done():
+			logger.Info("root context cancelled, exiting main loop")
+			break mainLoop
+		default:
+		}
+
 		checkErrorBudget(errorBudget)
 
 		timeout := time.Duration(checkInterval) * time.Second
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(rootCtx, timeout)
 
 		nodes, err := kubernetesClient.GetNodes(ctx)
 		if !ok(err, logger, "failed to get nodes") {
 			cancel()
+			// short sleep to avoid busy loop if repeatedly failing
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		logger.Info("retrieved nodes in the cluster", "amount", len(nodes))
@@ -188,7 +230,7 @@ func main() {
 				err := processNode(nodeCtx, node)
 
 				if !ok(err, logger, "failed to process node", "node", node) {
-					nodeCancel() // TODO check later if this is needed
+					nodeCancel()
 					wg.Done()
 					return
 				}
@@ -201,7 +243,32 @@ func main() {
 		increaseErrorBudget()
 		checkErrorBudget(errorBudget)
 		logger.Info("sleeping", "seconds", checkInterval)
-		time.Sleep(time.Duration(checkInterval) * time.Second)
+		select {
+		case <-rootCtx.Done():
+			break mainLoop
+		case <-time.After(time.Duration(checkInterval) * time.Second):
+		}
+	}
+
+	// perform shutdown tasks
+	logger.Info("shutting down")
+	// ensure HTTP server is shut down (if not already)
+	ctxShut, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctxShut); err != nil {
+		logger.Warn("error shutting down server", "error", err)
+	}
+	// close google client
+	if googleClient != nil {
+		googleClient.Close()
+	}
+	// if the server returned an unexpected error, log it
+	select {
+	case err := <-serverErrCh:
+		if err != nil && err != http.ErrServerClosed {
+			logger.Warn("http server returned error", "error", err)
+		}
+	default:
 	}
 }
 

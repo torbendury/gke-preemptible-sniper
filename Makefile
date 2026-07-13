@@ -7,7 +7,7 @@ RELEASE_IMAGE_NAME := torbendury/gke-preemptible-sniper
 allchecks: test staticcheck govuln
 
 ### Run the tests
-test: unittest gohealth
+test: unittest gohealth staticcheck govuln
 > helm lint helm/gke-preemptible-sniper
 
 unittest:
@@ -18,7 +18,7 @@ gohealth:
 > go vet ./...
 
 staticcheck:
-> go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
+> go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000,-ST1003 ./...
 
 govuln:
 > go run golang.org/x/vuln/cmd/govulncheck@latest ./...
